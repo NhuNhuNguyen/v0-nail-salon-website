@@ -11,28 +11,28 @@ export function Hero() {
           alt="Beautiful glossy Bio-Gel nails"
           fill
           priority
-          className="object-cover opacity-30"
+          className="object-cover opacity-25"
           sizes="100vw"
         />
       </div>
 
       <div className="relative mx-auto max-w-6xl px-4 lg:px-8">
         <div className="flex flex-col items-center text-center">
-          <span className="mb-4 inline-block rounded-full bg-primary/20 px-4 py-1.5 text-sm font-semibold text-primary-foreground">
+          <span className="mb-4 inline-block rounded-full bg-primary px-4 py-1.5 text-sm font-semibold text-primary-foreground">
             14-Day Guarantee
           </span>
-          <h1 className="font-serif text-4xl leading-tight text-primary-foreground md:text-5xl lg:text-6xl text-balance">
+          <h1 className="font-serif text-4xl leading-tight text-background md:text-5xl lg:text-6xl text-balance">
             Nails That Stay Fresh
             <br />
             for 14 Days
           </h1>
-          <p className="mt-6 max-w-xl text-lg leading-relaxed text-primary-foreground/80">
+          <p className="mt-6 max-w-xl text-lg leading-relaxed text-background/80">
             At MK Fashion Nails & Spa near{" "}
-            <strong className="text-primary-foreground">Markham & Lawrence</strong>, we
+            <strong className="text-primary">Markham & Lawrence</strong>, we
             do nails that last through real life — work, cooking, cleaning, and
             everything in between.
           </p>
-          <p className="mt-3 text-base font-medium text-primary-foreground/70">
+          <p className="mt-3 text-base font-medium text-background/60">
             No rushing. No surprise prices. Just solid, beautiful nails.
           </p>
 
@@ -46,7 +46,7 @@ export function Hero() {
             </a>
             <a
               href="#services"
-              className="inline-flex items-center rounded-full border border-primary-foreground/30 px-8 py-3.5 text-base font-semibold text-primary-foreground transition-colors hover:bg-primary-foreground/10"
+              className="inline-flex items-center rounded-full border border-background/30 px-8 py-3.5 text-base font-semibold text-background transition-colors hover:bg-background/10"
             >
               View Services
             </a>
