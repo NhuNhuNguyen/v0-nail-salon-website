@@ -7,8 +7,8 @@ export function Hero() {
       {/* Background image with overlay */}
       <div className="absolute inset-0">
         <Image
-          src="/images/hero-nails.jpg"
-          alt="Beautiful glossy Bio-Gel nails"
+          src="/images/nails-french-crystals.jpg"
+          alt="Elegant French tip nails with crystal accents by MK Fashion Nails"
           fill
           priority
           className="object-cover opacity-25"
