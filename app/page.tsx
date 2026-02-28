@@ -1,6 +1,7 @@
 import { Header } from "@/components/header"
 import { Hero } from "@/components/hero"
 import { Gallery } from "@/components/gallery"
+import { Reviews } from "@/components/reviews"
 import { WhyUs } from "@/components/why-us"
 import { Services } from "@/components/services"
 import { About } from "@/components/about"
@@ -15,6 +16,7 @@ export default function Page() {
       <main>
         <Hero />
         <Gallery />
+        <Reviews />
         <WhyUs />
         <Services />
         <About />
