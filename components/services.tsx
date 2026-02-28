@@ -13,28 +13,83 @@ interface ServiceCategory {
 
 const categories: ServiceCategory[] = [
   {
-    title: "Nails",
+    title: "Acrylic Nails",
     icon: "nails",
     items: [
-      { name: "Bio-Gel Full Set", price: "$55+" },
-      { name: "Acrylic Full Set", price: "$35+" },
-      { name: "Manicure", price: "$20+" },
-      { name: "Pedicure", price: "$35+" },
+      { name: "Fullset Acrylic", price: "$35 & Up" },
+      { name: "Refill Acrylic", price: "$30 & Up" },
     ],
   },
   {
-    title: "Waxing",
+    title: "UV Gel",
+    icon: "nails",
+    items: [
+      { name: "Fullset UV Gel", price: "$40 & Up" },
+      { name: "Refill UV Gel", price: "$35 & Up" },
+    ],
+  },
+  {
+    title: "Bio-Gel",
+    icon: "nails",
+    items: [
+      { name: "Fullset Biogel", price: "$55 & Up" },
+      { name: "Refill Biogel", price: "$40 & Up" },
+    ],
+  },
+  {
+    title: "Manicure & Pedicure",
+    icon: "nails",
+    items: [
+      { name: "Manicure", price: "$20 - $25" },
+      { name: "Pedicure", price: "$35 - $45" },
+      { name: "Mani-Pedi", price: "$55 - $75" },
+      { name: "Nail Pedicure", price: "$5 Each" },
+    ],
+  },
+  {
+    title: "Nail Extras",
+    icon: "nails",
+    items: [
+      { name: "Nail Take Off", price: "$10" },
+      { name: "Nail Art Designs", price: "$5 & Up" },
+      { name: "White Tip", price: "$15 & Up" },
+      { name: "Cut Down", price: "$5" },
+      { name: "Polish Change", price: "$7 - $15" },
+    ],
+  },
+  {
+    title: "Facial & Eyes",
     icon: "waxing",
     items: [
-      { name: "Brazilian", price: "$45+" },
-      { name: "Eyebrows", price: "$10" },
-      { name: "Full Leg", price: "$45" },
+      { name: "Facial", price: "$60 & Up" },
+      { name: "Eyelash Extension", price: "$45 - $100+" },
+      { name: "Threading", price: "$8" },
     ],
   },
   {
-    title: "Eyes & Threading",
-    icon: "threading",
-    items: [{ name: "Threading", price: "$8" }],
+    title: "Face Waxing",
+    icon: "waxing",
+    items: [
+      { name: "Eye Brow", price: "$10 & Up" },
+      { name: "Full Face", price: "$30 & Up" },
+      { name: "Upper Lip", price: "$5 & Up" },
+      { name: "Chin", price: "$7 & Up" },
+    ],
+  },
+  {
+    title: "Body Waxing",
+    icon: "waxing",
+    items: [
+      { name: "Half Arm", price: "$20 & Up" },
+      { name: "Full Arm", price: "$30 & Up" },
+      { name: "Underarm", price: "$15 & Up" },
+      { name: "Stomach", price: "$15 & Up" },
+      { name: "Back", price: "$30 & Up" },
+      { name: "Bikini Line", price: "$25 & Up" },
+      { name: "Brazilian", price: "$45 & Up" },
+      { name: "Half Leg", price: "$30 & Up" },
+      { name: "Full Leg", price: "$45 & Up" },
+    ],
   },
 ]
 
@@ -78,7 +133,7 @@ export function Services() {
           </p>
         </div>
 
-        <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {categories.map((cat) => (
             <div
               key={cat.title}
