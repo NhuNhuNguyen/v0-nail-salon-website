@@ -167,8 +167,8 @@ export function Services() {
         {/* Nail art image */}
         <div className="mt-12 overflow-hidden rounded-2xl">
           <Image
-            src="/images/nail-art.jpg"
-            alt="Colorful custom nail art designs showcase"
+            src="/images/nails-nude-sugar.jpg"
+            alt="Elegant nude nails with sugar texture and gold accents by MK Fashion Nails"
             width={1200}
             height={400}
             className="w-full object-cover"

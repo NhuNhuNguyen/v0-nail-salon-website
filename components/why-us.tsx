@@ -16,8 +16,8 @@ export function WhyUs() {
           {/* Image */}
           <div className="relative aspect-[4/3] overflow-hidden rounded-2xl">
             <Image
-              src="/images/technician-work.jpg"
-              alt="Nail technician carefully applying Bio-Gel"
+              src="/images/nails-pink-floral.jpg"
+              alt="Pink ombre nails with floral accents and crystals by MK Fashion Nails"
               fill
               className="object-cover"
               sizes="(max-width: 768px) 100vw, 50vw"
