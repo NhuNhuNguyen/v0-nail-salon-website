@@ -38,7 +38,7 @@ export function Hero() {
 
           <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row">
             <a
-              href="tel:+1"
+              href="tel:+16473368999"
               className="inline-flex items-center gap-2 rounded-full bg-primary px-8 py-3.5 text-base font-semibold text-primary-foreground shadow-lg transition-transform hover:scale-105"
             >
               <Phone className="h-5 w-5" />

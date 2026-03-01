@@ -33,7 +33,7 @@ export function Header() {
             </a>
           ))}
           <a
-            href="tel:+1"
+            href="tel:+16473368999"
             className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
           >
             <Phone className="h-4 w-4" />
@@ -71,7 +71,7 @@ export function Header() {
             ))}
             <li>
               <a
-                href="tel:+1"
+                href="tel:+16473368999"
                 className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground"
               >
                 <Phone className="h-4 w-4" />

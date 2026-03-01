@@ -34,7 +34,7 @@ export function Visit() {
               Phone
             </h3>
             <p className="mt-2 text-base font-medium text-background">
-              Call to book or ask about wait time
+              <a href="tel:+16473368999" className="transition-colors hover:text-primary">(647) 336-8999</a>
             </p>
           </div>
 
@@ -55,7 +55,7 @@ export function Visit() {
 
         <div className="mt-10 text-center">
           <a
-            href="tel:+1"
+            href="tel:+16473368999"
             className="inline-flex items-center gap-2 rounded-full bg-primary px-10 py-4 text-base font-semibold text-primary-foreground shadow-lg transition-transform hover:scale-105"
           >
             <Phone className="h-5 w-5" />
