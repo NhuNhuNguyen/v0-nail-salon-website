@@ -27,12 +27,13 @@ export function WhyUs() {
           {/* Content */}
           <div>
             <h2 className="font-serif text-3xl leading-tight text-foreground md:text-4xl text-balance">
-              Why Our Nails Last Longer
+              Why Our Nails Last
             </h2>
             <p className="mt-4 text-base leading-relaxed text-muted-foreground">
               Tired of nails that chip after a few days? Many clients come to us
               after bad experiences — rushed work, weak products, or hidden
-              costs. At MK Fashion Nails & Spa, durability comes first.
+              costs. At MK Fashion Nails & Spa, we take our time and use quality
+              products so your nails hold up as long as possible.
             </p>
 
             <ul className="mt-8 flex flex-col gap-4" role="list">
@@ -49,8 +50,9 @@ export function WhyUs() {
             <div className="mt-8 flex items-start gap-3 rounded-xl bg-secondary p-5">
               <ShieldCheck className="mt-0.5 h-6 w-6 shrink-0 text-primary" />
               <p className="text-base leading-relaxed text-foreground">
-                <strong>Our promise:</strong> Your nails stay fresh and chip-free
-                for at least <strong>14 days</strong>, or we&apos;ll fix it.
+                <strong>Our promise:</strong> If anything chips or lifts within{" "}
+                <strong>3 days</strong>, come back and we&apos;ll fix it for
+                free — no questions asked.
               </p>
             </div>
           </div>

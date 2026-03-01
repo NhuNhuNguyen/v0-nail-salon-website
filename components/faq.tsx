@@ -14,7 +14,7 @@ const faqs = [
   },
   {
     q: "How long do your nails last?",
-    a: "We guarantee 14 days of perfect wear on our nail sets when properly cared for.",
+    a: "We use quality products and take our time, so our nails hold up well through daily life. If anything chips or lifts within 3 days, just come back and we'll fix it for free.",
   },
   {
     q: "Do you do custom nail art?",

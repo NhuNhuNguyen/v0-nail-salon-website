@@ -19,21 +19,21 @@ export function Hero() {
       <div className="relative mx-auto max-w-6xl px-4 lg:px-8">
         <div className="flex flex-col items-center text-center">
           <span className="mb-4 inline-block rounded-full bg-primary px-4 py-1.5 text-sm font-semibold text-primary-foreground">
-            14-Day Guarantee
+            Walk-Ins Welcome
           </span>
           <h1 className="font-serif text-4xl leading-tight text-background md:text-5xl lg:text-6xl text-balance">
-            Nails That Stay Fresh
+            Nails Done Right,
             <br />
-            for 14 Days
+            Built to Last
           </h1>
           <p className="mt-6 max-w-xl text-lg leading-relaxed text-background/80">
             At MK Fashion Nails & Spa near{" "}
             <strong className="text-primary">Markham & Lawrence</strong>, we
-            do nails that last through real life — work, cooking, cleaning, and
-            everything in between.
+            take our time to do nails that hold up through real life — work,
+            cooking, cleaning, and everything in between.
           </p>
           <p className="mt-3 text-base font-medium text-background/60">
-            No rushing. No surprise prices. Just solid, beautiful nails.
+            No rushing. No surprise prices. Quality work you can count on.
           </p>
 
           <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row">

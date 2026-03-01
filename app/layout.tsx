@@ -9,7 +9,7 @@ const dmSerif = DM_Serif_Display({ weight: '400', subsets: ['latin'], variable: 
 export const metadata: Metadata = {
   title: 'MK Fashion Nails & Spa | Scarborough Nail Salon',
   description:
-    'Nails that stay fresh for 14 days — guaranteed. Bio-Gel, Acrylic, Manicures, Pedicures, Waxing & more at 579 Markham Rd, Scarborough. Walk-ins welcome.',
+    'Quality nails built to last. Bio-Gel, Acrylic, Manicures, Pedicures, Waxing & more at 579 Markham Rd, Scarborough. Walk-ins welcome. Free fixes within 3 days.',
   icons: {
     icon: [
       { url: '/icon-light-32x32.png', media: '(prefers-color-scheme: light)' },
