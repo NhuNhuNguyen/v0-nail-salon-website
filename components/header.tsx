@@ -1,7 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { Menu, X, Phone } from "lucide-react"
+import Link from "next/link"
+import { Menu, X, Phone, CalendarDays } from "lucide-react"
 
 const navLinks = [
   { label: "Why Us", href: "#why-us" },
@@ -17,7 +18,7 @@ export function Header() {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-card/90 backdrop-blur-md border-b border-border">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 lg:px-8">
-        <a href="#" className="font-serif text-xl tracking-tight text-foreground">
+        <a href="/" className="font-serif text-xl tracking-tight text-foreground">
           MK Fashion Nails
         </a>
 
@@ -32,6 +33,13 @@ export function Header() {
               {l.label}
             </a>
           ))}
+          <Link
+            href="/booking"
+            className="inline-flex items-center gap-2 rounded-full border border-primary px-5 py-2 text-sm font-semibold text-primary transition-colors hover:bg-primary/10"
+          >
+            <CalendarDays className="h-4 w-4" />
+            <span>Book Now</span>
+          </Link>
           <a
             href="tel:+16473368999"
             className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
@@ -69,6 +77,16 @@ export function Header() {
                 </a>
               </li>
             ))}
+            <li>
+              <Link
+                href="/booking"
+                className="inline-flex items-center gap-2 rounded-full border border-primary px-5 py-2.5 text-sm font-semibold text-primary"
+                onClick={() => setOpen(false)}
+              >
+                <CalendarDays className="h-4 w-4" />
+                <span>Book Now</span>
+              </Link>
+            </li>
             <li>
               <a
                 href="tel:+16473368999"
