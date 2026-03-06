@@ -77,6 +77,7 @@ function getCalendarDateRange(date: Date, calendarMode: CalendarMode) {
 }
 
 export function RealtimeBookings({ initialBookings, initialFrom, initialTo, staff }: RealtimeBookingsProps) {
+  const [mounted, setMounted] = useState(false)
   const [view, setView] = useState<'list' | 'calendar'>('list')
   const [calendarMode, setCalendarMode] = useState<CalendarMode>('month')
   const [currentDate, setCurrentDate] = useState(new Date())
@@ -125,6 +126,7 @@ export function RealtimeBookings({ initialBookings, initialFrom, initialTo, staf
 
   // Real-time updates
   useEffect(() => {
+    setMounted(true)
     const supabase = createClient()
     const channel = supabase
       .channel('admin-bookings')
@@ -143,10 +145,84 @@ export function RealtimeBookings({ initialBookings, initialFrom, initialTo, staf
     }
   }, [fetchListBookings, fetchCalendarBookings, view])
 
+  // Shared list view content
+  const listContent = (
+    <>
+      {/* Date range filter */}
+      <div className="mb-4 flex flex-wrap items-center gap-3">
+        <Filter className="h-4 w-4 text-muted-foreground" />
+        <span className="text-sm text-muted-foreground">From</span>
+        <Popover open={fromOpen} onOpenChange={setFromOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              size="sm"
+              className={cn('min-w-[140px] justify-start text-left font-normal')}
+            >
+              {format(listFrom, 'MMM d, yyyy')}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <Calendar
+              mode="single"
+              selected={listFrom}
+              onSelect={(d) => {
+                if (d) {
+                  setListFrom(d)
+                  if (d > listTo) setListTo(d)
+                }
+                setFromOpen(false)
+              }}
+              defaultMonth={listFrom}
+            />
+          </PopoverContent>
+        </Popover>
+        <span className="text-sm text-muted-foreground">to</span>
+        <Popover open={toOpen} onOpenChange={setToOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              size="sm"
+              className={cn('min-w-[140px] justify-start text-left font-normal')}
+            >
+              {format(listTo, 'MMM d, yyyy')}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <Calendar
+              mode="single"
+              selected={listTo}
+              onSelect={(d) => {
+                if (d) {
+                  setListTo(d)
+                  if (d < listFrom) setListFrom(d)
+                }
+                setToOpen(false)
+              }}
+              disabled={(d) => d < listFrom}
+              defaultMonth={listTo}
+            />
+          </PopoverContent>
+        </Popover>
+      </div>
+      <GroupedBookings bookings={bookings.filter((b) => b.status === 'pending')} onStatusChange={fetchListBookings} staff={staff} />
+    </>
+  )
+
+  // Before hydration, render list content directly (no Radix Tabs)
+  // to avoid useId() mismatch between server and client
+  if (!mounted) {
+    return (
+      <div className="space-y-4">
+        {listContent}
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-4">
       {/* View toggle */}
-      <Tabs id="admin-bookings-view" value={view} onValueChange={(v) => setView(v as 'list' | 'calendar')}>
+      <Tabs value={view} onValueChange={(v) => setView(v as 'list' | 'calendar')}>
         <TabsList>
           <TabsTrigger value="list" className="gap-1.5">
             <List className="h-4 w-4" />
@@ -159,64 +235,7 @@ export function RealtimeBookings({ initialBookings, initialFrom, initialTo, staf
         </TabsList>
 
         <TabsContent value="list">
-          {/* Date range filter */}
-          <div className="mb-4 flex flex-wrap items-center gap-3">
-            <Filter className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm text-muted-foreground">From</span>
-            <Popover open={fromOpen} onOpenChange={setFromOpen}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className={cn('min-w-[140px] justify-start text-left font-normal')}
-                >
-                  {format(listFrom, 'MMM d, yyyy')}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={listFrom}
-                  onSelect={(d) => {
-                    if (d) {
-                      setListFrom(d)
-                      if (d > listTo) setListTo(d)
-                    }
-                    setFromOpen(false)
-                  }}
-                  defaultMonth={listFrom}
-                />
-              </PopoverContent>
-            </Popover>
-            <span className="text-sm text-muted-foreground">to</span>
-            <Popover open={toOpen} onOpenChange={setToOpen}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className={cn('min-w-[140px] justify-start text-left font-normal')}
-                >
-                  {format(listTo, 'MMM d, yyyy')}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={listTo}
-                  onSelect={(d) => {
-                    if (d) {
-                      setListTo(d)
-                      if (d < listFrom) setListFrom(d)
-                    }
-                    setToOpen(false)
-                  }}
-                  disabled={(d) => d < listFrom}
-                  defaultMonth={listTo}
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
-          <GroupedBookings bookings={bookings.filter((b) => b.status === 'pending')} onStatusChange={fetchListBookings} staff={staff} />
+          {listContent}
         </TabsContent>
 
         <TabsContent value="calendar">
