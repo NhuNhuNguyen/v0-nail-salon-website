@@ -45,6 +45,7 @@ import {
 } from '@/components/ui/dialog'
 import type { BookingWithDetails, Staff } from '@/lib/types'
 import { cn } from '@/lib/utils'
+import { formatET } from '@/lib/timezone'
 
 const PAGE_SIZE = 20
 
@@ -241,13 +242,13 @@ export function BookingHistory({
         'Booking ID': b.id.slice(0, 8).toUpperCase(),
         Customer: b.customer.name,
         Phone: b.customer.phone,
-        'Date/Time': new Date(b.booking_time).toLocaleString('en-CA'),
+        'Date/Time': formatET(b.booking_time, 'MMM d, yyyy h:mm a'),
         Services: b.booking_services.map((bs) => bs.service.name).join(', '),
         Staff: b.staff?.name ?? '',
         Status: b.status.charAt(0).toUpperCase() + b.status.slice(1),
         'Estimated Total': `$${(b.estimated_total / 100).toFixed(2)}`,
         Deposit: b.deposit_uploaded_at ? 'Paid' : b.deposit_amount ? 'Pending' : 'N/A',
-        'Created At': new Date(b.created_at).toLocaleString('en-CA'),
+        'Created At': formatET(b.created_at, 'MMM d, yyyy h:mm a'),
       }))
 
       const ws = XLSX.utils.json_to_sheet(rows)
@@ -443,9 +444,9 @@ export function BookingHistory({
                   <TableCell>{b.customer.name}</TableCell>
                   <TableCell>{b.customer.phone}</TableCell>
                   <TableCell className="text-sm">
-                    <div>{new Date(b.booking_time).toLocaleDateString('en-CA', { month: 'short', day: 'numeric', year: 'numeric' })}</div>
+                    <div>{formatET(b.booking_time, 'MMM d, yyyy')}</div>
                     <div className="text-xs text-muted-foreground">
-                      {new Date(b.booking_time).toLocaleTimeString('en-CA', { hour: 'numeric', minute: '2-digit' })}
+                      {formatET(b.booking_time, 'h:mm a')}
                     </div>
                   </TableCell>
                   <TableCell className="max-w-[180px]">
@@ -487,8 +488,8 @@ export function BookingHistory({
                     </Badge>
                   </TableCell>
                   <TableCell className="text-xs text-muted-foreground">
-                    <div>{new Date(b.created_at).toLocaleDateString('en-CA', { month: 'short', day: 'numeric', year: 'numeric' })}</div>
-                    <div>{new Date(b.created_at).toLocaleTimeString('en-CA', { hour: 'numeric', minute: '2-digit' })}</div>
+                    <div>{formatET(b.created_at, 'MMM d, yyyy')}</div>
+                    <div>{formatET(b.created_at, 'h:mm a')}</div>
                   </TableCell>
                 </TableRow>
               ))}

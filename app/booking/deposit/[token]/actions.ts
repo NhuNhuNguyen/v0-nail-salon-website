@@ -52,6 +52,15 @@ export async function uploadDepositScreenshot(formData: FormData) {
 
   if (updateErr) return { error: 'Failed to save deposit info. Please try again.' }
 
+  // Broadcast deposit-uploaded event for admin real-time updates
+  const channel = supabase.channel('admin-bookings')
+  await channel.send({
+    type: 'broadcast',
+    event: 'deposit-uploaded',
+    payload: { bookingId },
+  })
+  supabase.removeChannel(channel)
+
   redirect(`/booking/confirm/${token}`)
 }
 

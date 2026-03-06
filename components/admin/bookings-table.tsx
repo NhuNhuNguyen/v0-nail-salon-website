@@ -42,6 +42,7 @@ import { Check, X, Pencil, ImageIcon, CalendarDays, Clock, User, DollarSign } fr
 import { updateBookingStatus, updateBooking, getBookingImageUrls } from '@/app/admin/actions'
 import type { BookingWithDetails, Staff } from '@/lib/types'
 import { cn } from '@/lib/utils'
+import { formatET, utcToET, etToUTC } from '@/lib/timezone'
 
 // Same time slots as booking form
 function generateTimeSlots() {
@@ -115,7 +116,7 @@ export function BookingsTable({ bookings, onStatusChange, staff }: BookingsTable
 
   const openEditModal = (b: BookingWithDetails) => {
     setEditTarget(b)
-    const dt = new Date(b.booking_time)
+    const dt = utcToET(b.booking_time)
     setEditDate(dt)
     setEditTime(`${String(dt.getHours()).padStart(2, '0')}:${String(dt.getMinutes()).padStart(2, '0')}`)
     setEditStaff(b.staff_id ?? 'none')
@@ -125,7 +126,7 @@ export function BookingsTable({ bookings, onStatusChange, staff }: BookingsTable
     if (!editTarget || !editDate || !editTime) return
 
     const [hours, minutes] = editTime.split(':').map(Number)
-    const newDateTime = setMinutes(setHours(editDate, hours), minutes)
+    const newDateTime = etToUTC(setMinutes(setHours(editDate, hours), minutes))
     const staffId = editStaff && editStaff !== 'none' ? editStaff : null
 
     startTransition(async () => {
@@ -214,12 +215,12 @@ export function BookingsTable({ bookings, onStatusChange, staff }: BookingsTable
               </Badge>
             </TableCell>
             <TableCell className="text-sm text-muted-foreground">
-              <div>{new Date(b.booking_time).toLocaleDateString('en-CA', { month: 'short', day: 'numeric', year: 'numeric' })}</div>
-              <div className="text-xs">{new Date(b.booking_time).toLocaleTimeString('en-CA', { hour: 'numeric', minute: '2-digit' })}</div>
+              <div>{formatET(b.booking_time, 'MMM d, yyyy')}</div>
+              <div className="text-xs">{formatET(b.booking_time, 'h:mm a')}</div>
             </TableCell>
             <TableCell className="text-xs text-muted-foreground">
-              <div>{new Date(b.created_at).toLocaleDateString('en-CA', { month: 'short', day: 'numeric', year: 'numeric' })}</div>
-              <div>{new Date(b.created_at).toLocaleTimeString('en-CA', { hour: 'numeric', minute: '2-digit' })}</div>
+              <div>{formatET(b.created_at, 'MMM d, yyyy')}</div>
+              <div>{formatET(b.created_at, 'h:mm a')}</div>
             </TableCell>
             <TableCell>
               <div className="flex h-8 items-center gap-2">

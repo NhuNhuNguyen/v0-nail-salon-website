@@ -132,6 +132,10 @@ export function RealtimeBookings({ initialBookings, initialFrom, initialTo, staf
         fetchListBookings()
         if (view === 'calendar') fetchCalendarBookings()
       })
+      .on('broadcast', { event: 'deposit-uploaded' }, () => {
+        fetchListBookings()
+        if (view === 'calendar') fetchCalendarBookings()
+      })
       .subscribe()
 
     return () => {

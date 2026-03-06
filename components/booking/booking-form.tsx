@@ -21,6 +21,7 @@ import { createBooking } from '@/app/booking/actions'
 import type { Service, Staff } from '@/lib/types'
 import { CalendarDays, Clock, Loader2, User, ImagePlus, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { etToUTC } from '@/lib/timezone'
 
 // Salon hours: Mon–Sat 10 AM – 8 PM, Sun 11 AM – 6 PM
 function getSalonHours(date: Date | undefined): { openH: number; closeH: number } | null {
@@ -105,9 +106,9 @@ export function BookingForm({ services, staff }: BookingFormProps) {
     if (!selectedTime) return setError('Please select a time for your visit.')
     if (selectedIds.size === 0) return setError('Please select at least one service.')
 
-    // Build ISO datetime from date + time
+    // Build ISO datetime from date + time (interpret as Eastern Time)
     const [hours, minutes] = selectedTime.split(':').map(Number)
-    const bookingDate = setMinutes(setHours(selectedDate, hours), minutes)
+    const bookingDate = etToUTC(setMinutes(setHours(selectedDate, hours), minutes))
 
     const formData = new FormData()
     formData.set('customerName', name.trim())

@@ -3,6 +3,7 @@
 import nodemailer from 'nodemailer'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { formatET } from '@/lib/timezone'
 
 const MAX_IMAGES = 5
 const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5 MB
@@ -169,14 +170,7 @@ export async function createBooking(formData: FormData) {
     },
   })
 
-  const bookingTimeFormatted = new Date(bookingTime).toLocaleString('en-CA', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-  })
+  const bookingTimeFormatted = formatET(bookingTime, 'EEEE, MMMM d, yyyy h:mm a')
 
   transporter.sendMail({
     from: process.env.GMAIL_USER,

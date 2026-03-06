@@ -25,6 +25,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import type { BookingWithDetails } from '@/lib/types'
 import { cn } from '@/lib/utils'
+import { formatET, utcToET } from '@/lib/timezone'
 
 type CalendarMode = 'month' | 'week' | 'day'
 
@@ -43,7 +44,15 @@ const statusColor: Record<string, string> = {
   cancelled: 'bg-red-400',
 }
 
-const HOURS = Array.from({ length: 12 }, (_, i) => i + 8) // 8 AM to 7 PM
+const HOURS = Array.from({ length: 12 }, (_, i) => i + 8) // 8 AM to 7 PM (fallback)
+
+/** Salon working hours by day: Mon–Sat 10–20, Sun 11–18 */
+function getSalonHourRange(date: Date): number[] {
+  const day = date.getDay()
+  const open = day === 0 ? 11 : 10
+  const close = day === 0 ? 18 : 20
+  return Array.from({ length: close - open + 1 }, (_, i) => i + open)
+}
 
 export function BookingCalendar({
   bookings,
@@ -56,7 +65,7 @@ export function BookingCalendar({
   const bookingsByDate = useMemo(() => {
     const map = new Map<string, BookingWithDetails[]>()
     for (const b of bookings) {
-      const key = format(parseISO(b.booking_time), 'yyyy-MM-dd')
+      const key = formatET(b.booking_time, 'yyyy-MM-dd')
       const arr = map.get(key) ?? []
       arr.push(b)
       map.set(key, arr)
@@ -256,15 +265,38 @@ function WeekView({
   const weekEnd = endOfWeek(currentDate, { weekStartsOn: 0 })
   const days = eachDayOfInterval({ start: weekStart, end: weekEnd })
 
+  // Union of all salon hours across the week (10–20 covers Mon–Sat, 11–18 for Sun)
+  const hours = useMemo(() => Array.from({ length: 11 }, (_, i) => i + 10), []) // 10 AM – 8 PM
+
+  // Build a lookup: "yyyy-MM-dd" → hour → BookingWithDetails[]
+  const grid = useMemo(() => {
+    const map = new Map<string, Map<number, BookingWithDetails[]>>()
+    for (const day of days) {
+      const key = format(day, 'yyyy-MM-dd')
+      const dayBookings = bookingsByDate.get(key) ?? []
+      const hourMap = new Map<number, BookingWithDetails[]>()
+      for (const b of dayBookings) {
+        const h = utcToET(b.booking_time).getHours()
+        const arr = hourMap.get(h) ?? []
+        arr.push(b)
+        hourMap.set(h, arr)
+      }
+      map.set(key, hourMap)
+    }
+    return map
+  }, [days, bookingsByDate])
+
   return (
     <div className="overflow-hidden rounded-lg border border-border">
       {/* Day header */}
-      <div className="grid grid-cols-7 border-b border-border bg-muted">
+      <div className="grid grid-cols-[4rem_repeat(7,1fr)] border-b border-border bg-muted">
+        <div />
         {days.map((day) => (
-          <div
+          <button
             key={day.toISOString()}
+            onClick={() => onDateClick(day)}
             className={cn(
-              'px-2 py-2 text-center text-xs font-medium',
+              'px-2 py-2 text-center text-xs font-medium transition-colors hover:bg-muted/80',
               isToday(day) ? 'text-primary' : 'text-muted-foreground',
             )}
           >
@@ -277,48 +309,51 @@ function WeekView({
             >
               {format(day, 'd')}
             </div>
-          </div>
+          </button>
         ))}
       </div>
 
-      {/* Time grid */}
-      <div className="grid grid-cols-7">
-        {days.map((day) => {
-          const key = format(day, 'yyyy-MM-dd')
-          const dayBookings = (bookingsByDate.get(key) ?? []).sort(
-            (a, b) => new Date(a.booking_time).getTime() - new Date(b.booking_time).getTime(),
-          )
+      {/* Hour rows */}
+      {hours.map((hour) => {
+        const timeLabel = format(new Date(2000, 0, 1, hour), 'h a')
+        return (
+          <div key={hour} className="grid grid-cols-[4rem_repeat(7,1fr)] border-b border-border last:border-b-0">
+            <div className="flex items-start justify-end border-r border-border pr-2 pt-1 text-[11px] font-medium text-muted-foreground">
+              {timeLabel}
+            </div>
+            {days.map((day) => {
+              const key = format(day, 'yyyy-MM-dd')
+              const salonHrs = getSalonHourRange(day)
+              const isOpen = salonHrs.includes(hour)
+              const hourBookings = grid.get(key)?.get(hour) ?? []
 
-          return (
-            <button
-              key={key}
-              onClick={() => onDateClick(day)}
-              className="flex min-h-[200px] flex-col gap-1 border-r border-border p-1.5 text-left transition-colors hover:bg-muted/50 last:border-r-0"
-            >
-              {dayBookings.length === 0 && (
-                <span className="mt-4 text-center text-xs text-muted-foreground/50">—</span>
-              )}
-              {dayBookings.map((b) => (
+              return (
                 <div
-                  key={b.id}
+                  key={key}
                   className={cn(
-                    'rounded px-1.5 py-1 text-[11px] text-white',
-                    statusColor[b.status] ?? 'bg-muted',
+                    'min-h-[48px] border-r border-border p-0.5 last:border-r-0',
+                    !isOpen && 'bg-muted/30',
+                    isOpen && hourBookings.length > 0 && 'bg-muted/10',
                   )}
                 >
-                  <div className="font-medium">
-                    {format(parseISO(b.booking_time), 'h:mm a')}
-                  </div>
-                  <div className="truncate opacity-90">{b.customer.name}</div>
-                  {b.staff && (
-                    <div className="truncate opacity-75">{b.staff.name}</div>
-                  )}
+                  {hourBookings.map((b) => (
+                    <div
+                      key={b.id}
+                      className={cn(
+                        'mb-0.5 rounded px-1 py-0.5 text-[10px] text-white',
+                        statusColor[b.status] ?? 'bg-muted',
+                      )}
+                    >
+                      <div className="font-medium">{formatET(b.booking_time, 'h:mm a')}</div>
+                      <div className="truncate opacity-90">{b.customer.name}</div>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </button>
-          )
-        })}
-      </div>
+              )
+            })}
+          </div>
+        )
+      })}
     </div>
   )
 }
@@ -332,6 +367,8 @@ function DayView({
   currentDate: Date
   bookings: BookingWithDetails[]
 }) {
+  const hours = useMemo(() => getSalonHourRange(currentDate), [currentDate])
+
   const sortedBookings = useMemo(
     () =>
       [...bookings].sort(
@@ -344,7 +381,7 @@ function DayView({
   const bookingsByHour = useMemo(() => {
     const map = new Map<number, BookingWithDetails[]>()
     for (const b of sortedBookings) {
-      const hour = parseISO(b.booking_time).getHours()
+      const hour = utcToET(b.booking_time).getHours()
       const arr = map.get(hour) ?? []
       arr.push(b)
       map.set(hour, arr)
@@ -361,7 +398,7 @@ function DayView({
 
   return (
     <div className="overflow-hidden rounded-lg border border-border">
-      {HOURS.map((hour) => {
+      {hours.map((hour) => {
         const hourBookings = bookingsByHour.get(hour) ?? []
         const timeLabel = format(new Date(2000, 0, 1, hour), 'h a')
 
@@ -389,7 +426,7 @@ function DayView({
                     )}
                   />
                   <span className="font-medium text-foreground">
-                    {format(parseISO(b.booking_time), 'h:mm a')}
+                    {formatET(b.booking_time, 'h:mm a')}
                   </span>
                   <span className="text-foreground">{b.customer.name}</span>
                   <span className="text-muted-foreground">{b.customer.phone}</span>

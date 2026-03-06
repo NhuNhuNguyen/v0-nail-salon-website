@@ -4,6 +4,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import type { BookingWithDetails } from '@/lib/types'
 import { CalendarDays, Clock, Phone, User, Hash, UserCheck, DollarSign, CheckCircle2, AlertCircle } from 'lucide-react'
+import { formatET } from '@/lib/timezone'
 
 interface BookingSummaryProps {
   booking: BookingWithDetails
@@ -23,24 +24,11 @@ export function BookingSummary({ booking, imageUrls }: BookingSummaryProps) {
     currency: 'CAD',
   }).format(booking.estimated_total / 100)
 
-  const arrivalDate = new Date(booking.booking_time).toLocaleDateString('en-CA', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  })
+  const arrivalDate = formatET(booking.booking_time, 'EEEE, MMMM d, yyyy')
 
-  const arrivalTime = new Date(booking.booking_time).toLocaleTimeString('en-CA', {
-    hour: 'numeric',
-    minute: '2-digit',
-  })
+  const arrivalTime = formatET(booking.booking_time, 'h:mm a')
 
-  const bookedOn = new Date(booking.created_at).toLocaleDateString('en-CA', {
-    month: 'short',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-  })
+  const bookedOn = formatET(booking.created_at, 'MMM d, h:mm a')
 
   return (
     <Card>
@@ -150,12 +138,7 @@ export function BookingSummary({ booking, imageUrls }: BookingSummaryProps) {
             {booking.deposit_uploaded_at ? (
               <p className="mt-1 text-xs opacity-80">
                 Payment screenshot submitted on{' '}
-                {new Date(booking.deposit_uploaded_at).toLocaleDateString('en-CA', {
-                  month: 'short',
-                  day: 'numeric',
-                  hour: 'numeric',
-                  minute: '2-digit',
-                })}
+                {formatET(booking.deposit_uploaded_at, 'MMM d, h:mm a')}
               </p>
             ) : (
               <p className="mt-1 text-xs opacity-80">

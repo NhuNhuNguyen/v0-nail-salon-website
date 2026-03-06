@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { uploadDepositScreenshot } from '@/app/booking/deposit/[token]/actions'
 import { Upload, ImagePlus, X, Loader2, DollarSign, CreditCard, CalendarDays, QrCode } from 'lucide-react'
 import type { PaymentInfo } from '@/lib/types'
+import { formatET } from '@/lib/timezone'
 
 interface DepositUploadProps {
   token: string
@@ -47,17 +48,9 @@ export function DepositUpload({
     currency: 'CAD',
   }).format(estimatedTotalCents / 100)
 
-  const arrivalDate = new Date(bookingTime).toLocaleDateString('en-CA', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  })
+  const arrivalDate = formatET(bookingTime, 'EEEE, MMMM d, yyyy')
 
-  const arrivalTime = new Date(bookingTime).toLocaleTimeString('en-CA', {
-    hour: 'numeric',
-    minute: '2-digit',
-  })
+  const arrivalTime = formatET(bookingTime, 'h:mm a')
 
   function handleFile(f: File) {
     if (f.size > 5 * 1024 * 1024) {
