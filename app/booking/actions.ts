@@ -58,6 +58,15 @@ export async function createBooking(formData: FormData) {
   // 2. Calculate estimated total
   const estimatedTotal = services.reduce((sum, s) => sum + s.price_min, 0)
 
+  // 2b. Fetch deposit amount from settings
+  const { data: depositSetting } = await supabase
+    .from('app_settings')
+    .select('value')
+    .eq('key', 'deposit_amount')
+    .single()
+
+  const depositAmountCents: number | null = depositSetting?.value?.cents ?? null
+
   // 3. Upsert customer by phone
   const { data: existingCustomers } = await supabase
     .from('customers')
@@ -91,14 +100,6 @@ export async function createBooking(formData: FormData) {
   const token = crypto.randomUUID().replace(/-/g, '').slice(0, 12)
 
   // 5. Insert booking
-  // ──────────────────────────────────────────────────────
-  // STRIPE HOOK POINT: Before inserting the booking (or after),
-  // create a Stripe Checkout Session for the deposit amount.
-  // On success, set deposit_amount on the booking row.
-  // Redirect to Stripe Checkout instead of the confirmation page.
-  // On Stripe webhook (checkout.session.completed), update the
-  // booking status and redirect to /booking/confirm/[token].
-  // ──────────────────────────────────────────────────────
   const { data: booking, error: bookErr } = await supabase
     .from('bookings')
     .insert({
@@ -107,7 +108,7 @@ export async function createBooking(formData: FormData) {
       confirmation_token: token,
       status: 'pending',
       estimated_total: estimatedTotal,
-      deposit_amount: null, // future Stripe
+      deposit_amount: depositAmountCents,
       booking_time: bookingTime,
     })
     .select('id')

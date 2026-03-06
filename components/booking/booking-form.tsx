@@ -22,24 +22,30 @@ import type { Service, Staff } from '@/lib/types'
 import { CalendarDays, Clock, Loader2, User, ImagePlus, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-// Generate time slots from 9:30 AM to 7:00 PM in 30-min increments
-function generateTimeSlots() {
+// Salon hours: Mon–Sat 10 AM – 8 PM, Sun 11 AM – 6 PM
+function getSalonHours(date: Date | undefined): { openH: number; closeH: number } | null {
+  if (!date) return null
+  const day = date.getDay()
+  if (day === 0) return { openH: 11, closeH: 18 } // Sunday
+  return { openH: 10, closeH: 20 } // Mon–Sat
+}
+
+function generateTimeSlots(date: Date | undefined) {
+  const hours = getSalonHours(date)
+  if (!hours) return []
   const slots: { label: string; value: string }[] = []
-  for (let h = 9; h <= 19; h++) {
+  for (let h = hours.openH; h <= hours.closeH; h++) {
     for (const m of [0, 30]) {
-      if (h === 9 && m === 0) continue // start at 9:30
-      if (h === 19 && m === 30) continue // end at 7:00
-      const date = setMinutes(setHours(new Date(2000, 0, 1), h), m)
+      if (h === hours.closeH && m > 0) continue // don't go past closing
+      const d = setMinutes(setHours(new Date(2000, 0, 1), h), m)
       slots.push({
-        label: format(date, 'h:mm a'),
+        label: format(d, 'h:mm a'),
         value: `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`,
       })
     }
   }
   return slots
 }
-
-const TIME_SLOTS = generateTimeSlots()
 
 const MAX_IMAGES = 5
 const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5 MB
@@ -64,6 +70,7 @@ export function BookingForm({ services, staff }: BookingFormProps) {
 
   const today = startOfDay(new Date())
   const maxDate = addDays(today, 30)
+  const timeSlots = generateTimeSlots(selectedDate)
 
   function handleToggle(serviceId: string) {
     setSelectedIds((prev) => {
@@ -122,7 +129,7 @@ export function BookingForm({ services, staff }: BookingFormProps) {
         return
       }
 
-      router.push(`/booking/confirm/${result.confirmationToken}`)
+      router.push(`/booking/deposit/${result.confirmationToken}`)
     } catch {
       setError('Something went wrong. Please try again.')
       setSubmitting(false)
@@ -131,6 +138,29 @@ export function BookingForm({ services, staff }: BookingFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
+      {/* DEV ONLY: quick dummy fill */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="flex items-center justify-between rounded-lg border border-dashed border-amber-400 bg-amber-50 px-3 py-2 dark:bg-amber-950/20">
+          <span className="text-xs font-semibold uppercase tracking-wide text-amber-600 dark:text-amber-400">Dev</span>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            className="h-7 border-amber-400 text-xs text-amber-700 hover:bg-amber-100 dark:text-amber-400 dark:hover:bg-amber-950/40"
+            onClick={() => {
+              setName('Test Customer')
+              setPhone('(647) 555-0123')
+              setSelectedDate(addDays(today, 1))
+              setSelectedTime('10:00')
+              if (services.length > 0) setSelectedIds(new Set([services[0].id]))
+              setError(null)
+            }}
+          >
+            Fill Dummy Data
+          </Button>
+        </div>
+      )}
+
       {/* Customer info */}
       <div className="space-y-4">
         <h2 className="font-serif text-xl text-foreground">Your Information</h2>
@@ -186,6 +216,13 @@ export function BookingForm({ services, staff }: BookingFormProps) {
                   selected={selectedDate}
                   onSelect={(date) => {
                     setSelectedDate(date)
+                    // Clear time if it falls outside the new day's hours
+                    if (date && selectedTime) {
+                      const slots = generateTimeSlots(date)
+                      if (!slots.some((s) => s.value === selectedTime)) {
+                        setSelectedTime('')
+                      }
+                    }
                     setCalendarOpen(false)
                   }}
                   disabled={(date) => date < today || date > maxDate}
@@ -198,15 +235,15 @@ export function BookingForm({ services, staff }: BookingFormProps) {
           {/* Time picker */}
           <div className="space-y-2">
             <Label>Time</Label>
-            <Select value={selectedTime} onValueChange={setSelectedTime}>
+            <Select value={selectedTime} onValueChange={setSelectedTime} disabled={!selectedDate}>
               <SelectTrigger className={cn('w-full', !selectedTime && 'text-muted-foreground')}>
                 <div className="flex items-center gap-2">
                   <Clock className="h-4 w-4" />
-                  <SelectValue placeholder="Pick a time" />
+                  <SelectValue placeholder={selectedDate ? 'Pick a time' : 'Select a date first'} />
                 </div>
               </SelectTrigger>
               <SelectContent>
-                {TIME_SLOTS.map((slot) => (
+                {timeSlots.map((slot) => (
                   <SelectItem key={slot.value} value={slot.value}>
                     {slot.label}
                   </SelectItem>

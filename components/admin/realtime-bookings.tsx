@@ -39,6 +39,8 @@ function parseBookings(raw: any[]): BookingWithDetails[] {
     status: b.status,
     estimated_total: b.estimated_total,
     deposit_amount: b.deposit_amount,
+    deposit_image_path: b.deposit_image_path ?? null,
+    deposit_uploaded_at: b.deposit_uploaded_at ?? null,
     notes: b.notes,
     sample_image_paths: b.sample_image_paths ?? [],
     booking_time: b.booking_time,
@@ -140,7 +142,7 @@ export function RealtimeBookings({ initialBookings, initialFrom, initialTo, staf
   return (
     <div className="space-y-4">
       {/* View toggle */}
-      <Tabs value={view} onValueChange={(v) => setView(v as 'list' | 'calendar')}>
+      <Tabs id="admin-bookings-view" value={view} onValueChange={(v) => setView(v as 'list' | 'calendar')}>
         <TabsList>
           <TabsTrigger value="list" className="gap-1.5">
             <List className="h-4 w-4" />
@@ -210,7 +212,7 @@ export function RealtimeBookings({ initialBookings, initialFrom, initialTo, staf
               </PopoverContent>
             </Popover>
           </div>
-          <GroupedBookings bookings={bookings} onStatusChange={fetchListBookings} staff={staff} />
+          <GroupedBookings bookings={bookings.filter((b) => b.status === 'pending')} onStatusChange={fetchListBookings} staff={staff} />
         </TabsContent>
 
         <TabsContent value="calendar">
@@ -218,7 +220,7 @@ export function RealtimeBookings({ initialBookings, initialFrom, initialTo, staf
             <div className="py-12 text-center text-muted-foreground">Loading bookings…</div>
           ) : (
             <BookingCalendar
-              bookings={calendarBookings}
+              bookings={calendarBookings.filter((b) => b.status === 'pending')}
               currentDate={currentDate}
               onDateChange={setCurrentDate}
               mode={calendarMode}

@@ -1,8 +1,9 @@
 import Image from 'next/image'
+import Link from 'next/link'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import type { BookingWithDetails } from '@/lib/types'
-import { CalendarDays, Clock, Phone, User, Hash, UserCheck } from 'lucide-react'
+import { CalendarDays, Clock, Phone, User, Hash, UserCheck, DollarSign, CheckCircle2, AlertCircle } from 'lucide-react'
 
 interface BookingSummaryProps {
   booking: BookingWithDetails
@@ -129,12 +130,46 @@ export function BookingSummary({ booking, imageUrls }: BookingSummaryProps) {
           <span className="font-serif text-2xl text-foreground">{total}+</span>
         </div>
 
-        {/* Future: Deposit status would appear here */}
-        {/* {booking.deposit_amount && (
-          <div className="rounded-lg bg-green-50 p-3 text-sm text-green-700">
-            Deposit paid: {formatCurrency(booking.deposit_amount)}
+        {/* Deposit status */}
+        {booking.deposit_amount != null && booking.deposit_amount > 0 && (
+          <div className={`rounded-lg p-3 text-sm ${
+            booking.deposit_uploaded_at
+              ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400'
+              : 'bg-amber-50 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400'
+          }`}>
+            <div className="flex items-center gap-2">
+              {booking.deposit_uploaded_at ? (
+                <CheckCircle2 className="h-4 w-4" />
+              ) : (
+                <AlertCircle className="h-4 w-4" />
+              )}
+              <span className="font-medium">
+                Deposit: {new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'CAD' }).format(booking.deposit_amount / 100)}
+              </span>
+            </div>
+            {booking.deposit_uploaded_at ? (
+              <p className="mt-1 text-xs opacity-80">
+                Payment screenshot submitted on{' '}
+                {new Date(booking.deposit_uploaded_at).toLocaleDateString('en-CA', {
+                  month: 'short',
+                  day: 'numeric',
+                  hour: 'numeric',
+                  minute: '2-digit',
+                })}
+              </p>
+            ) : (
+              <p className="mt-1 text-xs opacity-80">
+                Deposit payment screenshot has not been uploaded yet.{' '}
+                <Link
+                  href={`/booking/deposit/${booking.confirmation_token}`}
+                  className="underline font-medium"
+                >
+                  Upload now
+                </Link>
+              </p>
+            )}
           </div>
-        )} */}
+        )}
       </CardContent>
     </Card>
   )

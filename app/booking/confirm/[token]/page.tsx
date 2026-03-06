@@ -1,7 +1,8 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { ArrowLeft, LinkIcon } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
+import { CopyLinkHint } from '@/components/booking/copy-link-hint'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { RealtimeConfirmation } from '@/components/booking/realtime-confirmation'
@@ -70,6 +71,8 @@ export default async function ConfirmPage({ params }: ConfirmPageProps) {
     status: booking.status,
     estimated_total: booking.estimated_total,
     deposit_amount: booking.deposit_amount,
+    deposit_image_path: booking.deposit_image_path ?? null,
+    deposit_uploaded_at: booking.deposit_uploaded_at ?? null,
     notes: booking.notes,
     sample_image_paths: booking.sample_image_paths ?? [],
     booking_time: booking.booking_time,
@@ -123,13 +126,8 @@ export default async function ConfirmPage({ params }: ConfirmPageProps) {
           imageUrls={imageUrls}
         />
 
-        {/* Save hint */}
-        <div className="mt-6 flex items-start gap-2 rounded-lg bg-secondary p-4 text-sm text-muted-foreground">
-          <LinkIcon className="mt-0.5 h-4 w-4 shrink-0" />
-          <p>
-            <strong>Save this link</strong> — you can re-open it on your phone when you arrive at the salon.
-          </p>
-        </div>
+        {/* Save hint – click to copy URL */}
+        <CopyLinkHint />
 
         {/* Book another */}
         <div className="mt-6 text-center">

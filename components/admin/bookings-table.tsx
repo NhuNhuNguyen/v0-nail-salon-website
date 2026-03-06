@@ -38,7 +38,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Check, X, Pencil, ImageIcon, CalendarDays, Clock, User } from 'lucide-react'
+import { Check, X, Pencil, ImageIcon, CalendarDays, Clock, User, DollarSign } from 'lucide-react'
 import { updateBookingStatus, updateBooking, getBookingImageUrls } from '@/app/admin/actions'
 import type { BookingWithDetails, Staff } from '@/lib/types'
 import { cn } from '@/lib/utils'
@@ -80,9 +80,10 @@ export function BookingsTable({ bookings, onStatusChange, staff }: BookingsTable
   const [isPending, startTransition] = useTransition()
 
   // Image lightbox state
-  const [imageUrls, setImageUrls] = useState<string[]>([])
-  const [imageDialogOpen, setImageDialogOpen] = useState(false)
-  const [imageLoading, setImageLoading] = useState(false)
+  const [imageUrls, setImageUrls] = useState<string[]>([]);
+  const [imageDialogOpen, setImageDialogOpen] = useState(false);
+  const [imageLoading, setImageLoading] = useState(false);
+  const [imageDialogTitle, setImageDialogTitle] = useState('Reference Images');
 
   // Edit modal state
   const [editTarget, setEditTarget] = useState<BookingWithDetails | null>(null)
@@ -101,9 +102,10 @@ export function BookingsTable({ bookings, onStatusChange, staff }: BookingsTable
     })
   }
 
-  const handleViewImages = (paths: string[]) => {
+  const handleViewImages = (paths: string[], title = 'Reference Images') => {
     setImageLoading(true)
     setImageDialogOpen(true)
+    setImageDialogTitle(title)
     startTransition(async () => {
       const result = await getBookingImageUrls(paths)
       setImageUrls(result.urls)
@@ -154,9 +156,11 @@ export function BookingsTable({ bookings, onStatusChange, staff }: BookingsTable
           <TableHead>Phone</TableHead>
           <TableHead>Services</TableHead>
           <TableHead className="text-right">Total</TableHead>
+          <TableHead>Deposit</TableHead>
           <TableHead>Staff</TableHead>
           <TableHead>Status</TableHead>
-          <TableHead>Arrival Time</TableHead>
+          <TableHead>Appointment</TableHead>
+          <TableHead>Created</TableHead>
           <TableHead />
         </TableRow>
       </TableHeader>
@@ -179,6 +183,28 @@ export function BookingsTable({ bookings, onStatusChange, staff }: BookingsTable
                 currency: 'CAD',
               }).format(b.estimated_total / 100)}
             </TableCell>
+            <TableCell>
+              {b.deposit_amount ? (
+                b.deposit_uploaded_at ? (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-auto px-2 py-1 text-xs font-medium text-emerald-600 hover:text-emerald-700"
+                    disabled={!b.deposit_image_path}
+                    onClick={() => b.deposit_image_path && handleViewImages([b.deposit_image_path], 'Deposit Screenshot')}
+                  >
+                    <DollarSign className="mr-1 h-3 w-3" />
+                    Paid
+                  </Button>
+                ) : (
+                  <Badge variant="outline" className="text-xs text-amber-600 border-amber-300">
+                    Pending
+                  </Badge>
+                )
+              ) : (
+                <span className="text-xs text-muted-foreground">—</span>
+              )}
+            </TableCell>
             <TableCell className="text-sm text-muted-foreground">
               {b.staff?.name ?? '—'}
             </TableCell>
@@ -188,13 +214,15 @@ export function BookingsTable({ bookings, onStatusChange, staff }: BookingsTable
               </Badge>
             </TableCell>
             <TableCell className="text-sm text-muted-foreground">
-              {new Date(b.booking_time).toLocaleTimeString('en-CA', {
-                hour: 'numeric',
-                minute: '2-digit',
-              })}
+              <div>{new Date(b.booking_time).toLocaleDateString('en-CA', { month: 'short', day: 'numeric', year: 'numeric' })}</div>
+              <div className="text-xs">{new Date(b.booking_time).toLocaleTimeString('en-CA', { hour: 'numeric', minute: '2-digit' })}</div>
+            </TableCell>
+            <TableCell className="text-xs text-muted-foreground">
+              <div>{new Date(b.created_at).toLocaleDateString('en-CA', { month: 'short', day: 'numeric', year: 'numeric' })}</div>
+              <div>{new Date(b.created_at).toLocaleTimeString('en-CA', { hour: 'numeric', minute: '2-digit' })}</div>
             </TableCell>
             <TableCell>
-              <div className="flex items-center gap-2">
+              <div className="flex h-8 items-center gap-2">
                 {/* Image viewer */}
                 {b.sample_image_paths.length > 0 && (
                   <Button
@@ -292,7 +320,7 @@ export function BookingsTable({ bookings, onStatusChange, staff }: BookingsTable
     <Dialog open={imageDialogOpen} onOpenChange={setImageDialogOpen}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Reference Images</DialogTitle>
+          <DialogTitle>{imageDialogTitle}</DialogTitle>
         </DialogHeader>
         {imageLoading ? (
           <div className="py-12 text-center text-muted-foreground">Loading images…</div>

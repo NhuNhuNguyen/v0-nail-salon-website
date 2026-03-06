@@ -35,6 +35,8 @@ export default async function AdminPage() {
       status: b.status,
       estimated_total: b.estimated_total,
       deposit_amount: b.deposit_amount,
+      deposit_image_path: b.deposit_image_path ?? null,
+      deposit_uploaded_at: b.deposit_uploaded_at ?? null,
       notes: b.notes,
       sample_image_paths: b.sample_image_paths ?? [],
       booking_time: b.booking_time,

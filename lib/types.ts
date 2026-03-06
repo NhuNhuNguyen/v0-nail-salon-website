@@ -33,7 +33,9 @@ export interface Booking {
   confirmation_token: string
   status: 'pending' | 'confirmed' | 'completed' | 'cancelled'
   estimated_total: number // cents
-  deposit_amount: number | null // cents — future Stripe use
+  deposit_amount: number | null // cents
+  deposit_image_path: string | null
+  deposit_uploaded_at: string | null
   notes: string | null
   sample_image_paths: string[]
   booking_time: string // ISO datetime — customer's expected arrival
@@ -57,6 +59,31 @@ export interface BookingWithDetails extends Booking {
   customer: Pick<Customer, 'name' | 'phone'>
   staff: Pick<Staff, 'id' | 'name'> | null
   booking_services: BookingServiceWithDetails[]
+}
+
+// ─── Settings types ───
+
+export interface AppSetting {
+  key: string
+  value: any
+  updated_at: string
+}
+
+export interface PaymentInfo {
+  method: string
+  details: string
+  // Bank Transfer specific fields
+  bank_name?: string
+  account_holder?: string
+  account_number?: string
+  transit_number?: string
+  institution_number?: string
+  qr_code_path?: string
+}
+
+export interface PaginatedBookings {
+  data: BookingWithDetails[]
+  totalCount: number
 }
 
 // ─── Form types ───

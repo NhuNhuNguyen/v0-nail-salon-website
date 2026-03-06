@@ -151,6 +151,33 @@ CREATE POLICY "Authenticated users can manage booking_services"
   WITH CHECK (true);
 
 -- ============================================================
+-- 6. App Settings table (key-value for configurable values)
+-- ============================================================
+CREATE TABLE app_settings (
+  key TEXT PRIMARY KEY,
+  value JSONB NOT NULL,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+ALTER TABLE app_settings ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Anyone can read app_settings"
+  ON app_settings FOR SELECT
+  USING (true);
+
+CREATE POLICY "Authenticated users can manage app_settings"
+  ON app_settings FOR ALL
+  TO authenticated
+  USING (true)
+  WITH CHECK (true);
+
+-- ============================================================
+-- Migration: Add deposit columns to bookings
+-- ============================================================
+ALTER TABLE bookings ADD COLUMN IF NOT EXISTS deposit_image_path TEXT;
+ALTER TABLE bookings ADD COLUMN IF NOT EXISTS deposit_uploaded_at TIMESTAMPTZ;
+
+-- ============================================================
 -- Realtime
 -- ============================================================
 ALTER PUBLICATION supabase_realtime ADD TABLE bookings;

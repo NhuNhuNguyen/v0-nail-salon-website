@@ -64,3 +64,9 @@ INSERT INTO staff (name) VALUES
   ('Bianca'),
   ('Christina'),
   ('Diana');
+
+-- App Settings
+INSERT INTO app_settings (key, value) VALUES
+  ('deposit_amount', '{"cents": 2000}'),
+  ('deposit_payment_info', '{"method": "Bank Transfer", "details": "Please send the deposit via e-Transfer to:\n\nEmail: payments@mkfashionnails.com\nName: MK Fashion Nails & Spa\n\nPlease include your booking name as the memo."}')
+ON CONFLICT (key) DO NOTHING;

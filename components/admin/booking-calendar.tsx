@@ -310,6 +310,9 @@ function WeekView({
                     {format(parseISO(b.booking_time), 'h:mm a')}
                   </div>
                   <div className="truncate opacity-90">{b.customer.name}</div>
+                  {b.staff && (
+                    <div className="truncate opacity-75">{b.staff.name}</div>
+                  )}
                 </div>
               ))}
             </button>
@@ -390,6 +393,9 @@ function DayView({
                   </span>
                   <span className="text-foreground">{b.customer.name}</span>
                   <span className="text-muted-foreground">{b.customer.phone}</span>
+                  {b.staff && (
+                    <span className="text-xs text-muted-foreground">· {b.staff.name}</span>
+                  )}
                   <span className="ml-auto truncate text-xs text-muted-foreground">
                     {b.booking_services.map((bs) => bs.service.name).join(', ')}
                   </span>
