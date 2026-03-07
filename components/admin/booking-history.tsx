@@ -235,36 +235,33 @@ export function BookingHistory({
         return
       }
 
-      // Dynamic import xlsx for client-side generation
-      const XLSX = (await import('xlsx')).default
+      const headers = [
+        'Booking ID', 'Customer', 'Phone', 'Date/Time', 'Services',
+        'Staff', 'Status', 'Estimated Total', 'Deposit', 'Created At',
+      ]
 
-      const rows = result.data.map((b) => ({
-        'Booking ID': b.id.slice(0, 8).toUpperCase(),
-        Customer: b.customer.name,
-        Phone: b.customer.phone,
-        'Date/Time': formatET(b.booking_time, 'MMM d, yyyy h:mm a'),
-        Services: b.booking_services.map((bs) => bs.service.name).join(', '),
-        Staff: b.staff?.name ?? '',
-        Status: b.status.charAt(0).toUpperCase() + b.status.slice(1),
-        'Estimated Total': `$${(b.estimated_total / 100).toFixed(2)}`,
-        Deposit: b.deposit_uploaded_at ? 'Paid' : b.deposit_amount ? 'Pending' : 'N/A',
-        'Created At': formatET(b.created_at, 'MMM d, yyyy h:mm a'),
-      }))
+      const rows = result.data.map((b) => [
+        b.id.slice(0, 8).toUpperCase(),
+        b.customer.name,
+        b.customer.phone,
+        formatET(b.booking_time, 'MMM d, yyyy h:mm a'),
+        b.booking_services.map((bs) => bs.service.name).join(', '),
+        b.staff?.name ?? '',
+        b.status.charAt(0).toUpperCase() + b.status.slice(1),
+        `$${(b.estimated_total / 100).toFixed(2)}`,
+        b.deposit_uploaded_at ? 'Paid' : b.deposit_amount ? 'Pending' : 'N/A',
+        formatET(b.created_at, 'MMM d, yyyy h:mm a'),
+      ])
 
-      const ws = XLSX.utils.json_to_sheet(rows)
-      const wb = XLSX.utils.book_new()
-      XLSX.utils.book_append_sheet(wb, ws, 'Bookings')
-
-      // Auto-size columns
-      const colWidths = Object.keys(rows[0]).map((key) => ({
-        wch: Math.max(
-          key.length,
-          ...rows.map((r) => String((r as any)[key]).length),
-        ) + 2,
-      }))
-      ws['!cols'] = colWidths
-
-      XLSX.writeFile(wb, `bookings-export-${format(new Date(), 'yyyy-MM-dd')}.xlsx`)
+      const escape = (v: string) => `"${v.replace(/"/g, '""')}"`
+      const csv = [headers, ...rows].map((row) => row.map(escape).join(',')).join('\r\n')
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `bookings-export-${format(new Date(), 'yyyy-MM-dd')}.csv`
+      a.click()
+      URL.revokeObjectURL(url)
     } catch (err) {
       console.error('Export error:', err)
     }
@@ -402,7 +399,7 @@ export function BookingHistory({
             className="gap-1.5"
           >
             <Download className="h-4 w-4" />
-            {exporting ? 'Exporting…' : 'Export Excel'}
+            {exporting ? 'Exporting…' : 'Export CSV'}
           </Button>
         </div>
       </div>
