@@ -1,43 +1,26 @@
 "use client"
 
 import { useState } from "react"
-import { Star } from "lucide-react"
-
-interface Review {
-  id: number
-  name: string
-  rating: number
-  text: string
-  date: string
-  service: string
-}
-
-const initialReviews: Review[] = [
-  {
-    id: 1,
-    name: "Tanya M.",
-    rating: 5,
-    text: "Best nail shop in Scarborough, hands down. My Bio-Gel set lasted 3 weeks with zero lifting. The staff are so friendly and patient with designs.",
-    date: "Feb 2026",
-    service: "Bio-Gel Fullset",
-  },
-  {
-    id: 2,
-    name: "Priya S.",
-    rating: 5,
-    text: "Walk-in on a Saturday and they got me in within 15 minutes. Great mani-pedi, very clean, fair prices. I keep coming back!",
-    date: "Jan 2026",
-    service: "Mani-Pedi",
-  },
-  {
-    id: 3,
-    name: "Keisha R.",
-    rating: 5,
-    text: "I drove from Brampton for these nails and it was worth it. The nail art is incredible and the price is so reasonable compared to downtown shops.",
-    date: "Jan 2026",
-    service: "Acrylic + Nail Art",
-  },
-]
+import { format } from "date-fns"
+import { Star, CalendarDays } from "lucide-react"
+import { Calendar } from "@/components/ui/calendar"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel"
+import { submitReview } from "@/app/actions/reviews"
+import type { Review, Staff } from "@/lib/types"
 
 function StarRating({
   rating,
@@ -76,36 +59,60 @@ function StarRating({
   )
 }
 
-export function Reviews() {
-  const [reviews, setReviews] = useState<Review[]>(initialReviews)
+function formatReviewDate(createdAt: string): string {
+  return new Date(createdAt).toLocaleDateString("en-US", {
+    month: "short",
+    year: "numeric",
+  })
+}
+
+interface ReviewsProps {
+  initialReviews: Review[]
+  staff: Staff[]
+}
+
+export function Reviews({ initialReviews, staff }: ReviewsProps) {
   const [showForm, setShowForm] = useState(false)
   const [name, setName] = useState("")
   const [rating, setRating] = useState(0)
   const [text, setText] = useState("")
   const [service, setService] = useState("")
+  const [dateOfService, setDateOfService] = useState<Date | undefined>(undefined)
+  const [staffId, setStaffId] = useState<string>("")
+  const [calendarOpen, setCalendarOpen] = useState(false)
   const [submitted, setSubmitted] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!name.trim() || !text.trim() || rating === 0) return
 
-    const newReview: Review = {
-      id: Date.now(),
+    setSubmitting(true)
+    setError(null)
+
+    const result = await submitReview({
       name: name.trim(),
       rating,
       text: text.trim(),
-      date: new Date().toLocaleDateString("en-US", {
-        month: "short",
-        year: "numeric",
-      }),
       service: service.trim() || "General",
+      date_of_service: dateOfService ? format(dateOfService, "yyyy-MM-dd") : null,
+      staff_id: staffId || null,
+    })
+
+    setSubmitting(false)
+
+    if (result.error) {
+      setError(result.error)
+      return
     }
 
-    setReviews((prev) => [newReview, ...prev])
     setName("")
     setRating(0)
     setText("")
     setService("")
+    setDateOfService(undefined)
+    setStaffId("")
     setShowForm(false)
     setSubmitted(true)
     setTimeout(() => setSubmitted(false), 4000)
@@ -123,43 +130,52 @@ export function Reviews() {
           </p>
         </div>
 
-        {/* Reviews grid */}
-        <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {reviews.map((review) => (
-            <div
-              key={review.id}
-              className="flex flex-col rounded-2xl border border-border bg-card p-6 shadow-sm"
-            >
-              <div className="flex items-center justify-between">
-                <StarRating rating={review.rating} />
-                <span className="text-xs text-muted-foreground">
-                  {review.date}
-                </span>
-              </div>
-              <p className="mt-4 flex-1 text-sm leading-relaxed text-foreground">
-                &ldquo;{review.text}&rdquo;
-              </p>
-              <div className="mt-4 flex items-center justify-between border-t border-border pt-4">
-                <div className="flex items-center gap-2">
-                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
-                    {review.name.charAt(0)}
-                  </span>
-                  <span className="text-sm font-semibold text-foreground">
-                    {review.name}
-                  </span>
+        {/* Reviews carousel */}
+        <Carousel
+          opts={{ align: "start", loop: false }}
+          className="mt-12"
+        >
+          <CarouselContent className="-ml-4">
+            {initialReviews.map((review) => (
+              <CarouselItem
+                key={review.id}
+                className="pl-4 basis-4/5 sm:basis-1/2 lg:basis-1/3"
+              >
+                <div className="flex h-full flex-col rounded-2xl border border-border bg-card p-6 shadow-sm">
+                  <div className="flex items-center justify-between">
+                    <StarRating rating={review.rating} />
+                    <span className="text-xs text-muted-foreground">
+                      {formatReviewDate(review.created_at)}
+                    </span>
+                  </div>
+                  <p className="mt-4 flex-1 text-sm leading-relaxed text-foreground">
+                    &ldquo;{review.text}&rdquo;
+                  </p>
+                  <div className="mt-4 flex items-center justify-between border-t border-border pt-4">
+                    <div className="flex items-center gap-2">
+                      <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
+                        {review.name.charAt(0)}
+                      </span>
+                      <span className="text-sm font-semibold text-foreground">
+                        {review.name}
+                      </span>
+                    </div>
+                    <span className="rounded-full bg-secondary px-2.5 py-0.5 text-xs font-medium text-secondary-foreground">
+                      {review.service}
+                    </span>
+                  </div>
                 </div>
-                <span className="rounded-full bg-secondary px-2.5 py-0.5 text-xs font-medium text-secondary-foreground">
-                  {review.service}
-                </span>
-              </div>
-            </div>
-          ))}
-        </div>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          {/* <CarouselPrevious className="-left-4 hidden sm:flex" />
+          <CarouselNext className="-right-4 hidden sm:flex" /> */}
+        </Carousel>
 
         {/* Success message */}
         {submitted && (
           <div className="mt-6 rounded-xl bg-primary/10 p-4 text-center text-sm font-medium text-primary">
-            Thank you for your review! We appreciate your feedback.
+            Thank you for your feedback! We truly appreciate it and will use it to further enhance our service.
           </div>
         )}
 
@@ -232,6 +248,59 @@ export function Reviews() {
                   />
                 </div>
 
+                {/* Staff (optional) */}
+                {staff.length > 0 && (
+                  <div>
+                    <label className="mb-1.5 block text-sm font-medium text-foreground">
+                      Staff Member
+                    </label>
+                    <Select value={staffId} onValueChange={setStaffId}>
+                      <SelectTrigger className="w-full rounded-xl">
+                        <SelectValue placeholder="Select staff (optional)" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {staff.map((s) => (
+                          <SelectItem key={s.id} value={s.id}>
+                            {s.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
+                {/* Date of service (optional) */}
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium text-foreground">
+                    Date of Visit
+                  </label>
+                  <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+                    <PopoverTrigger asChild>
+                      <button
+                        type="button"
+                        className="inline-flex w-full items-center gap-2 rounded-xl border border-input bg-background px-4 py-2.5 text-sm text-foreground transition-colors hover:bg-muted"
+                      >
+                        <CalendarDays className="h-4 w-4 text-muted-foreground" />
+                        {dateOfService
+                          ? format(dateOfService, "MMM d, yyyy")
+                          : <span className="text-muted-foreground">Select date (optional)</span>}
+                      </button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={dateOfService}
+                        onSelect={(date) => {
+                          setDateOfService(date)
+                          setCalendarOpen(false)
+                        }}
+                        disabled={(date) => date > new Date()}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+
                 {/* Review text */}
                 <div>
                   <label
@@ -251,13 +320,17 @@ export function Reviews() {
                   />
                 </div>
 
+                {error && (
+                  <p className="text-sm text-destructive">{error}</p>
+                )}
+
                 <div className="flex items-center gap-3">
                   <button
                     type="submit"
-                    disabled={!name.trim() || !text.trim() || rating === 0}
+                    disabled={!name.trim() || !text.trim() || rating === 0 || submitting}
                     className="rounded-full bg-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-40"
                   >
-                    Submit Review
+                    {submitting ? "Submitting..." : "Submit Review"}
                   </button>
                   <button
                     type="button"

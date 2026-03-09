@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { logout } from '@/app/admin/login/actions'
-import { CalendarDays, LogOut, Users, History, Settings } from 'lucide-react'
+import { CalendarDays, LogOut, Users, History, Settings, Star } from 'lucide-react'
 
 export function AdminNav() {
   const pathname = usePathname()
@@ -47,6 +47,17 @@ export function AdminNav() {
             >
               <Users className="h-4 w-4" />
               Staff
+            </Link>
+            <Link
+              href="/admin/reviews"
+              className={`inline-flex items-center gap-2 text-sm font-medium transition-colors ${
+                pathname === '/admin/reviews'
+                  ? 'text-foreground'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              <Star className="h-4 w-4" />
+              Reviews
             </Link>
             <Link
               href="/admin/settings"

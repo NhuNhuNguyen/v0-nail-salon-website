@@ -49,6 +49,19 @@ export interface BookingService {
   price_at_booking: number // cents
 }
 
+export interface Review {
+  id: string
+  name: string
+  rating: number
+  text: string
+  service: string
+  date_of_service: string | null
+  staff_id: string | null
+  status: 'pending' | 'published' | 'archived'
+  created_at: string
+  staff?: Pick<Staff, 'id' | 'name'> | null
+}
+
 // ─── Joined / composite types ───
 
 export interface BookingServiceWithDetails extends BookingService {
