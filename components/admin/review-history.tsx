@@ -2,10 +2,21 @@
 
 import { useState, useEffect } from 'react'
 import { format } from 'date-fns'
-import { Star, Archive, RotateCcw } from 'lucide-react'
+import { Star, Archive, RotateCcw, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
 import { createClient } from '@/lib/supabase/client'
-import { updateReviewStatus, fetchReviewById } from '@/app/admin/reviews/actions'
+import { updateReviewStatus, fetchReviewById, deleteReview } from '@/app/admin/reviews/actions'
 import type { Review } from '@/lib/types'
 
 type Tab = 'published' | 'archived'
@@ -65,6 +76,15 @@ export function ReviewHistory({ initialReviews }: ReviewHistoryProps) {
       setReviews((prev) =>
         prev.map((r) => (r.id === reviewId ? { ...r, status: newStatus } : r)),
       )
+    }
+  }
+
+  async function handleDelete(reviewId: string) {
+    setLoading(reviewId)
+    const result = await deleteReview(reviewId)
+    setLoading(null)
+    if (!result.error) {
+      setReviews((prev) => prev.filter((r) => r.id !== reviewId))
     }
   }
 
@@ -173,14 +193,47 @@ export function ReviewHistory({ initialReviews }: ReviewHistoryProps) {
                       Archive
                     </Button>
                   ) : (
-                    <Button
-                      size="sm"
-                      onClick={() => handleAction(review.id, 'published')}
-                      disabled={loading === review.id}
-                    >
-                      <RotateCcw className="mr-1 h-3.5 w-3.5" />
-                      Re-publish
-                    </Button>
+                    <>
+                      <Button
+                        size="sm"
+                        onClick={() => handleAction(review.id, 'published')}
+                        disabled={loading === review.id}
+                      >
+                        <RotateCcw className="mr-1 h-3.5 w-3.5" />
+                        Re-publish
+                      </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            disabled={loading === review.id}
+                            className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10 data-[state=open]:bg-destructive/10"
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Delete review?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              This will permanently remove the review from{' '}
+                              <strong>{review.name}</strong>. This action cannot
+                              be undone.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => handleDelete(review.id)}
+                              className=" hover:bg-destructive/90"
+                            >
+                              Delete
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </>
                   )}
                 </div>
               </div>

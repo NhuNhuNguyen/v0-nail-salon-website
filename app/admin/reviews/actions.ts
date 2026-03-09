@@ -4,6 +4,28 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import type { Review } from '@/lib/types'
 
+export async function deleteReview(
+  reviewId: string,
+): Promise<{ error?: string }> {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) return { error: 'Unauthorized' }
+
+  const { error } = await supabase
+    .from('reviews')
+    .delete()
+    .eq('id', reviewId)
+
+  if (error) return { error: error.message }
+
+  revalidatePath('/admin/reviews')
+  revalidatePath('/')
+
+  return {}
+}
+
 export async function fetchReviewById(
   reviewId: string,
 ): Promise<{ data: Review | null; error?: string }> {

@@ -48,6 +48,12 @@ CREATE POLICY "Authenticated users can update reviews"
   USING (true)
   WITH CHECK (true);
 
+-- Authenticated admin: can DELETE reviews
+CREATE POLICY "Authenticated users can delete reviews"
+  ON reviews FOR DELETE
+  TO authenticated
+  USING (true);
+
 -- ============================================================
 -- Realtime
 -- ============================================================
