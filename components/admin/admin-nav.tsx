@@ -13,7 +13,7 @@ export function AdminNav() {
     <header className="border-b border-border bg-card">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 lg:px-8">
         <div className="flex items-center gap-6">
-          <span className="font-serif text-lg text-foreground">MK Admin</span>
+          <Link href="/" className="font-serif text-lg text-foreground">MK Admin</Link>
           <nav className="flex items-center gap-4">
             <Link
               href="/admin"

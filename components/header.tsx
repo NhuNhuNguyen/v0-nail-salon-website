@@ -5,11 +5,11 @@ import Link from "next/link"
 import { Menu, X, Phone, CalendarDays } from "lucide-react"
 
 const navLinks = [
-  { label: "Why Us", href: "#why-us" },
-  { label: "Services", href: "#services" },
-  { label: "About", href: "#about" },
-  { label: "FAQ", href: "#faq" },
-  { label: "Visit", href: "#visit" },
+  { label: "Why Us", href: "/#why-us" },
+  { label: "Services", href: "/#services" },
+  { label: "About", href: "/#about" },
+  { label: "FAQ", href: "/#faq" },
+  { label: "Visit", href: "/#visit" },
 ]
 
 export function Header() {
