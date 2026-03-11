@@ -1,8 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import { format } from "date-fns"
-import { Star, CalendarDays } from "lucide-react"
+import { Star, CalendarDays, ChevronLeft, ChevronRight } from "lucide-react"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import {
@@ -16,8 +16,6 @@ import {
   Carousel,
   CarouselContent,
   CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
 } from "@/components/ui/carousel"
 import { submitReview } from "@/app/actions/reviews"
 import type { Review, Staff } from "@/lib/types"
@@ -83,6 +81,27 @@ export function Reviews({ initialReviews, staff }: ReviewsProps) {
   const [submitted, setSubmitted] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [carouselApi, setCarouselApi] = useState<any>(null)
+  const [current, setCurrent] = useState(0)
+  const [count, setCount] = useState(0)
+  const isHoveredRef = useRef(false)
+
+  useEffect(() => {
+    if (!carouselApi) return
+    setCount(carouselApi.scrollSnapList().length)
+    setCurrent(carouselApi.selectedScrollSnap())
+    const onSelect = () => setCurrent(carouselApi.selectedScrollSnap())
+    carouselApi.on("select", onSelect)
+    const interval = setInterval(() => {
+      if (isHoveredRef.current) return
+      carouselApi.scrollNext()
+    }, 4000)
+    return () => {
+      carouselApi.off("select", onSelect)
+      clearInterval(interval)
+    }
+  }, [carouselApi])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -131,46 +150,87 @@ export function Reviews({ initialReviews, staff }: ReviewsProps) {
         </div>
 
         {/* Reviews carousel */}
-        <Carousel
-          opts={{ align: "start", loop: false }}
-          className="mt-12"
+        <div
+          className="relative mt-12"
+          onMouseEnter={() => { isHoveredRef.current = true }}
+          onMouseLeave={() => { isHoveredRef.current = false }}
+          onTouchStart={() => { isHoveredRef.current = true }}
+          onTouchEnd={() => { setTimeout(() => { isHoveredRef.current = false }, 2000) }}
         >
-          <CarouselContent className="-ml-4">
-            {initialReviews.map((review) => (
-              <CarouselItem
-                key={review.id}
-                className="pl-4 basis-4/5 sm:basis-1/2 lg:basis-1/3"
-              >
-                <div className="flex h-full flex-col rounded-2xl border border-border bg-card p-6 shadow-sm">
-                  <div className="flex items-center justify-between">
-                    <StarRating rating={review.rating} />
-                    <span className="text-xs text-muted-foreground">
-                      {formatReviewDate(review.created_at)}
-                    </span>
-                  </div>
-                  <p className="mt-4 flex-1 text-sm leading-relaxed text-foreground">
-                    &ldquo;{review.text}&rdquo;
-                  </p>
-                  <div className="mt-4 flex items-center justify-between border-t border-border pt-4">
-                    <div className="flex items-center gap-2">
-                      <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
-                        {review.name.charAt(0)}
-                      </span>
-                      <span className="text-sm font-semibold text-foreground">
-                        {review.name}
+          <Carousel
+            setApi={setCarouselApi}
+            opts={{ align: "start", loop: false }}
+          >
+            <CarouselContent className="-ml-4">
+              {initialReviews.map((review) => (
+                <CarouselItem
+                  key={review.id}
+                  className="pl-4 basis-4/5 sm:basis-1/2 lg:basis-1/3"
+                >
+                  <div className="flex h-full flex-col rounded-2xl border border-border bg-card p-6 shadow-sm">
+                    <div className="flex items-center justify-between">
+                      <StarRating rating={review.rating} />
+                      <span className="text-xs text-muted-foreground">
+                        {formatReviewDate(review.created_at)}
                       </span>
                     </div>
-                    <span className="rounded-full bg-secondary px-2.5 py-0.5 text-xs font-medium text-secondary-foreground">
-                      {review.service}
-                    </span>
+                    <p className="mt-4 flex-1 text-sm leading-relaxed text-foreground">
+                      &ldquo;{review.text}&rdquo;
+                    </p>
+                    <div className="mt-4 flex items-center justify-between border-t border-border pt-4">
+                      <div className="flex items-center gap-2">
+                        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
+                          {review.name.charAt(0)}
+                        </span>
+                        <span className="text-sm font-semibold text-foreground">
+                          {review.name}
+                        </span>
+                      </div>
+                      <span className="rounded-full bg-secondary px-2.5 py-0.5 text-xs font-medium text-secondary-foreground">
+                        {review.service}
+                      </span>
+                    </div>
                   </div>
-                </div>
-              </CarouselItem>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+          </Carousel>
+          {/* Gradient fade on the right edge to hint more content */}
+          <div className="pointer-events-none absolute inset-y-0 right-0 w-16 bg-gradient-to-l from-background to-transparent" />
+        </div>
+
+        {/* Carousel navigation: prev/next arrows + dot indicators */}
+        <div className="mt-5 flex items-center justify-center gap-3">
+          <button
+            type="button"
+            onClick={() => carouselApi?.scrollPrev()}
+            className="flex h-8 w-8 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+            aria-label="Previous reviews"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+          <div className="flex gap-1.5">
+            {Array.from({ length: count }).map((_, i) => (
+              <button
+                key={i}
+                type="button"
+                onClick={() => carouselApi?.scrollTo(i)}
+                className={`h-1.5 rounded-full transition-all duration-300 ${
+                  i === current ? "w-6 bg-primary" : "w-1.5 bg-border hover:bg-primary/50"
+                }`}
+                aria-label={`Go to slide ${i + 1}`}
+              />
             ))}
-          </CarouselContent>
-          {/* <CarouselPrevious className="-left-4 hidden sm:flex" />
-          <CarouselNext className="-right-4 hidden sm:flex" /> */}
-        </Carousel>
+          </div>
+          <button
+            type="button"
+            onClick={() => carouselApi?.scrollNext()}
+            className="flex h-8 w-8 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+            aria-label="Next reviews"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </button>
+        </div>
 
         {/* Success message */}
         {submitted && (
