@@ -1,6 +1,5 @@
 'use server'
 
-import nodemailer from 'nodemailer'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { formatET } from '@/lib/timezone'
@@ -156,15 +155,7 @@ export async function createBooking(formData: FormData) {
   }
 
   // 8. Send email notification to staff (optional - only if configured)
-  if (process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD && process.env.STAFF_EMAIL) {
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: process.env.GMAIL_USER,
-        pass: process.env.GMAIL_APP_PASSWORD,
-      },
-    })
-
+  if (process.env.SENDGRID_API_KEY && process.env.SENDGRID_FROM_EMAIL && process.env.STAFF_EMAIL) {
     const bookingTimeFormatted = formatET(bookingTime, 'EEEE, MMMM d, yyyy h:mm a')
     const adminLink = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/admin`
     
@@ -234,24 +225,23 @@ export async function createBooking(formData: FormData) {
       </html>
     `
 
-    transporter.sendMail({
-      from: process.env.GMAIL_USER,
-      to: process.env.STAFF_EMAIL,
-      subject: `📞 New Booking – ${customerName}`,
-      html: htmlContent,
-      text: [
-        `📞 New booking received!`,
-        ``,
-        `👤 Name:       ${customerName}`,
-        `📱 Phone:      ${phone}`,
-        `📅 Date/Time:  ${bookingTimeFormatted}`,
-        `💅 Services:   ${services.map((s) => s.name).join(', ')}`,
-        `💰 Est. Total: $${(estimatedTotal / 100).toFixed(2)}+`,
-        ``,
-        `📋 Booking ID: ${booking.id.slice(0, 8).toUpperCase()}`,
-        ``,
-        `⏰ Please call the customer ASAP to confirm this booking.`,
-      ].join('\n'),
+    // Send via SendGrid
+    fetch('https://api.sendgrid.com/v3/mail/send', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${process.env.SENDGRID_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        personalizations: [
+          {
+            to: [{ email: process.env.STAFF_EMAIL }],
+            subject: `📞 New Booking – ${customerName}`,
+          },
+        ],
+        from: { email: process.env.SENDGRID_FROM_EMAIL },
+        content: [{ type: 'text/html', value: htmlContent }],
+      }),
     }).catch(console.error)
   }
 

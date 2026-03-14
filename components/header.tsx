@@ -33,13 +33,6 @@ export function Header() {
               {l.label}
             </a>
           ))}
-          <Link
-            href="/booking"
-            className="inline-flex items-center gap-2 rounded-full border border-primary px-5 py-2 text-sm font-semibold text-primary transition-colors hover:bg-primary/10"
-          >
-            <CalendarDays className="h-4 w-4" />
-            <span>Book Now</span>
-          </Link>
           <a
             href="tel:+16473368999"
             className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
@@ -47,6 +40,13 @@ export function Header() {
             <Phone className="h-4 w-4" />
             <span>Call Now</span>
           </a>
+          <Link
+            href="/booking"
+            className="inline-flex items-center gap-2 rounded-full border border-primary px-5 py-2 text-sm font-semibold text-primary transition-colors hover:bg-primary/10"
+          >
+            <CalendarDays className="h-4 w-4" />
+            <span>Book Now</span>
+          </Link>
         </nav>
 
         {/* Mobile toggle */}
@@ -78,6 +78,15 @@ export function Header() {
               </li>
             ))}
             <li>
+              <a
+                href="tel:+16473368999"
+                className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground"
+              >
+                <Phone className="h-4 w-4" />
+                <span>Call Now</span>
+              </a>
+            </li>
+            <li>
               <Link
                 href="/booking"
                 className="inline-flex items-center gap-2 rounded-full border border-primary px-5 py-2.5 text-sm font-semibold text-primary"
@@ -86,15 +95,6 @@ export function Header() {
                 <CalendarDays className="h-4 w-4" />
                 <span>Book Now</span>
               </Link>
-            </li>
-            <li>
-              <a
-                href="tel:+16473368999"
-                className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground"
-              >
-                <Phone className="h-4 w-4" />
-                <span>Call Now</span>
-              </a>
             </li>
           </ul>
         </nav>

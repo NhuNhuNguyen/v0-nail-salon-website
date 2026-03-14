@@ -1,6 +1,6 @@
 import Image from "next/image"
 import Link from "next/link"
-import { CalendarDays } from "lucide-react"
+import { CalendarDays, Phone } from "lucide-react"
 
 export function Hero() {
   return (
@@ -38,19 +38,20 @@ export function Hero() {
           </p>
 
           <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row">
+            <a
+              href="tel:+16473368999"
+              className="inline-flex items-center gap-2 rounded-full bg-primary px-8 py-3.5 text-base font-semibold text-primary-foreground shadow-lg transition-transform hover:scale-105"
+            >
+              <Phone className="h-5 w-5" />
+              Call Now
+            </a>
             <Link
               href="/booking"
-              className="inline-flex items-center gap-2 rounded-full bg-primary px-8 py-3.5 text-base font-semibold text-primary-foreground shadow-lg transition-transform hover:scale-105"
+              className="inline-flex items-center gap-2 rounded-full border border-background/30 px-8 py-3.5 text-base font-semibold text-background transition-colors hover:bg-background/10"
             >
               <CalendarDays className="h-5 w-5" />
               Book Now
             </Link>
-            <a
-              href="#services"
-              className="inline-flex items-center rounded-full border border-background/30 px-8 py-3.5 text-base font-semibold text-background transition-colors hover:bg-background/10"
-            >
-              View Services
-            </a>
           </div>
         </div>
       </div>

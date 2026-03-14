@@ -35,9 +35,20 @@ function generateTimeSlots(date: Date | undefined) {
   const hours = getSalonHours(date)
   if (!hours) return []
   const slots: { label: string; value: string }[] = []
+  const now = new Date()
+  const isToday = date ? date.toDateString() === now.toDateString() : false
+  
   for (let h = hours.openH; h <= hours.closeH; h++) {
     for (const m of [0, 30]) {
       if (h === hours.closeH && m > 0) continue // don't go past closing
+      
+      // Filter out past times if booking is for today
+      if (isToday) {
+        const slotTime = new Date()
+        slotTime.setHours(h, m, 0, 0)
+        if (slotTime <= now) continue // skip past times
+      }
+      
       const d = setMinutes(setHours(new Date(2000, 0, 1), h), m)
       slots.push({
         label: format(d, 'h:mm a'),

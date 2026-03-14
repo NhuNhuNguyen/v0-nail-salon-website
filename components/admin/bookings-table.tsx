@@ -309,10 +309,10 @@ export function BookingsTable({ bookings, onStatusChange, staff }: BookingsTable
                       onClick={() =>
                         handleAction(
                           b.id,
-                          'completed',
+                          'confirmed',
                         )
                       }
-                      aria-label="Mark as completed"
+                      aria-label="Confirm booking"
                     >
                       <Check className="h-4 w-4" />
                     </Button>

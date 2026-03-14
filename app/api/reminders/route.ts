@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import nodemailer from 'nodemailer'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { formatET } from '@/lib/timezone'
 
@@ -19,6 +18,14 @@ export async function POST(req: NextRequest) {
 
   try {
     const admin = createAdminClient()
+
+    // Check SendGrid is configured
+    if (!process.env.SENDGRID_API_KEY || !process.env.SENDGRID_FROM_EMAIL) {
+      return NextResponse.json({
+        error: 'SendGrid not configured',
+        message: 'Set SENDGRID_API_KEY and SENDGRID_FROM_EMAIL in .env.local',
+      }, { status: 500 })
+    }
 
     // Find confirmed bookings that need reminders (24-25 hours before appointment)
     const now = new Date()
@@ -50,15 +57,8 @@ export async function POST(req: NextRequest) {
     }
 
     let sent = 0
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: process.env.GMAIL_USER,
-        pass: process.env.GMAIL_APP_PASSWORD,
-      },
-    })
 
-    // Send reminder email to each customer
+    // Send reminder email to each customer via SendGrid
     for (const booking of bookings) {
       const customer = booking.customer as any
       const services = (booking.booking_services as any[]).map((bs: any) => bs.service.name).join(', ')
@@ -119,13 +119,28 @@ export async function POST(req: NextRequest) {
       `
 
       try {
-        await transporter.sendMail({
-          from: process.env.GMAIL_USER,
-          to: customer.phone, // This should be customer email - adjust if your table has email
-          subject: `✨ Appointment Reminder – Tomorrow at ${formatET(booking.booking_time, 'h:mm a')}`,
-          html: htmlContent,
-          text: `Appointment Reminder\n\nHi ${customer.name},\n\nYour appointment is tomorrow at ${appointmentTime}\n\nServices: ${services}\n\nPlease arrive 5-10 minutes early.\n\nThank you!`,
+        // Send via SendGrid API
+        const response = await fetch('https://api.sendgrid.com/v3/mail/send', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${process.env.SENDGRID_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            personalizations: [
+              {
+                to: [{ email: customer.phone }], // Note: Should be customer email if available
+                subject: `✨ Appointment Reminder – Tomorrow at ${formatET(booking.booking_time, 'h:mm a')}`,
+              },
+            ],
+            from: { email: process.env.SENDGRID_FROM_EMAIL },
+            content: [{ type: 'text/html', value: htmlContent }],
+          }),
         })
+
+        if (!response.ok) {
+          throw new Error(`SendGrid API error: ${response.status}`)
+        }
 
         // Mark reminder as sent
         await admin

@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { endOfWeek, format } from 'date-fns'
 import { createClient } from '@/lib/supabase/server'
 import { RealtimeBookings } from '@/components/admin/realtime-bookings'
+import { AdminStats } from '@/components/admin/admin-stats'
 import type { BookingWithDetails, Staff } from '@/lib/types'
 
 export const metadata: Metadata = {
@@ -61,6 +62,7 @@ export default async function AdminPage() {
           Manage bookings &mdash; switch between list and calendar views.
         </p>
       </div>
+      <AdminStats initialBookings={bookings} />
       <RealtimeBookings initialBookings={bookings} initialFrom={fromStr} initialTo={toStr} staff={staffList} />
     </div>
   )
