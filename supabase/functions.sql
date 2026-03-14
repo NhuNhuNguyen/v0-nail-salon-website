@@ -18,7 +18,7 @@ BEGIN
     SELECT
       b.id,
       b.customer_id,
-      b.confirmation_token,Thi
+      b.confirmation_token,
       b.status,
       b.estimated_total,
       b.deposit_amount,

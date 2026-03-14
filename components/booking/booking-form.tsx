@@ -130,7 +130,8 @@ export function BookingForm({ services, staff }: BookingFormProps) {
         return
       }
 
-      router.push(`/booking/deposit/${result.confirmationToken}`)
+      // Skip deposit step - go directly to confirmation
+      router.push(`/booking/confirm/${result.confirmationToken}`)
     } catch {
       setError('Something went wrong. Please try again.')
       setSubmitting(false)

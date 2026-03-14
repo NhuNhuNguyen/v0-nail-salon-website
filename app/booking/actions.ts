@@ -59,14 +59,8 @@ export async function createBooking(formData: FormData) {
   // 2. Calculate estimated total
   const estimatedTotal = services.reduce((sum, s) => sum + s.price_min, 0)
 
-  // 2b. Fetch deposit amount from settings
-  const { data: depositSetting } = await supabase
-    .from('app_settings')
-    .select('value')
-    .eq('key', 'deposit_amount')
-    .single()
-
-  const depositAmountCents: number | null = depositSetting?.value?.cents ?? null
+  // Note: No deposit required in this flow - customers book without deposit
+  // Admin will call to confirm the appointment
 
   // 3. Upsert customer by phone
   const { data: existingCustomers } = await supabase
@@ -109,7 +103,7 @@ export async function createBooking(formData: FormData) {
       confirmation_token: token,
       status: 'pending',
       estimated_total: estimatedTotal,
-      deposit_amount: depositAmountCents,
+      deposit_amount: null,
       booking_time: bookingTime,
     })
     .select('id')
@@ -161,33 +155,35 @@ export async function createBooking(formData: FormData) {
     }
   }
 
-  // 8. Send email notification to staff
-  const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-      user: process.env.GMAIL_USER,
-      pass: process.env.GMAIL_APP_PASSWORD,
-    },
-  })
+  // 8. Send email notification to staff (optional - only if configured)
+  if (process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD && process.env.STAFF_EMAIL) {
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.GMAIL_USER,
+        pass: process.env.GMAIL_APP_PASSWORD,
+      },
+    })
 
-  const bookingTimeFormatted = formatET(bookingTime, 'EEEE, MMMM d, yyyy h:mm a')
+    const bookingTimeFormatted = formatET(bookingTime, 'EEEE, MMMM d, yyyy h:mm a')
 
-  transporter.sendMail({
-    from: process.env.GMAIL_USER,
-    to: process.env.STAFF_EMAIL,
-    subject: `New Booking – ${customerName}`,
-    text: [
-      `New booking received!`,
-      ``,
-      `Name:       ${customerName}`,
-      `Phone:      ${phone}`,
-      `Date/Time:  ${bookingTimeFormatted}`,
-      `Services:   ${services.map((s) => s.name).join(', ')}`,
-      `Est. Total: $${(estimatedTotal / 100).toFixed(2)}+`,
-      ``,
-      `Booking ID: ${booking.id.slice(0, 8).toUpperCase()}`,
-    ].join('\n'),
-  }).catch(console.error)
+    transporter.sendMail({
+      from: process.env.GMAIL_USER,
+      to: process.env.STAFF_EMAIL,
+      subject: `New Booking – ${customerName}`,
+      text: [
+        `New booking received!`,
+        ``,
+        `Name:       ${customerName}`,
+        `Phone:      ${phone}`,
+        `Date/Time:  ${bookingTimeFormatted}`,
+        `Services:   ${services.map((s) => s.name).join(', ')}`,
+        `Est. Total: $${(estimatedTotal / 100).toFixed(2)}+`,
+        ``,
+        `Booking ID: ${booking.id.slice(0, 8).toUpperCase()}`,
+      ].join('\n'),
+    }).catch(console.error)
+  }
 
   // 9. Broadcast new-booking event for admin real-time updates
   const channel = supabase.channel('admin-bookings')

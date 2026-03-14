@@ -111,11 +111,28 @@ export default async function ConfirmPage({ params }: ConfirmPageProps) {
         {/* Header */}
         <div className="mb-8 space-y-2 text-center">
           <h1 className="font-serif text-3xl leading-tight text-foreground md:text-4xl">
-            Booking Confirmed
+            Booking Request Submitted
           </h1>
           <p className="text-muted-foreground">
-            Thank you! Here are your booking details.
+            Thank you! Our team will review your booking and contact you shortly.
           </p>
+        </div>
+
+        {/* Pending confirmation notice */}
+        <div className="mb-8 rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-900/30 dark:bg-blue-950/20">
+          <div className="flex gap-3">
+            <div className="h-5 w-5 rounded-full bg-blue-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+              <svg className="h-3 w-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M18 5.5H2a1.5 1.5 0 00-1.5 1.5v6a1.5 1.5 0 001.5 1.5h16a1.5 1.5 0 001.5-1.5v-6a1.5 1.5 0 00-1.5-1.5zm-5.5 9a1 1 0 11-2 0 1 1 0 012 0z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="flex-1">
+              <h3 className="font-medium text-blue-900 dark:text-blue-100">Admin will call to confirm</h3>
+              <p className="text-sm text-blue-800 dark:text-blue-200 mt-1">
+                Our salon staff will contact you at <strong>{booking.customer.phone}</strong> to confirm your appointment time. No deposit required!
+              </p>
+            </div>
+          </div>
         </div>
 
         {/* Realtime-enabled summary */}

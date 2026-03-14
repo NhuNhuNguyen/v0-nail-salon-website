@@ -1,6 +1,6 @@
 -- ============================================================
--- MK Fashion Nails & Spa — Database Schema
--- Run this in the Supabase SQL Editor (Dashboard → SQL Editor)
+-- MK Fashion Nails & Spa — Database Schema (Idempotent Version)
+-- Run this in the Supabase SQL Editor if tables/indexes already exist
 -- ============================================================
 
 -- 1. Services table (replaces hardcoded data in components/services.tsx)
@@ -57,7 +57,7 @@ CREATE TABLE IF NOT EXISTS booking_services (
 );
 
 -- ============================================================
--- Indexes
+-- Indexes (safe to re-run)
 -- ============================================================
 CREATE INDEX IF NOT EXISTS idx_staff_active ON staff(active);
 CREATE INDEX IF NOT EXISTS idx_bookings_confirmation_token ON bookings(confirmation_token);
@@ -69,88 +69,6 @@ CREATE INDEX IF NOT EXISTS idx_customers_phone ON customers(phone);
 CREATE INDEX IF NOT EXISTS idx_services_active_sort ON services(active, sort_order);
 
 -- ============================================================
--- Row Level Security
--- ============================================================
-
--- Services: public read (active only), authenticated full access
-ALTER TABLE services ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Anyone can read active services"
-  ON services FOR SELECT
-  USING (active = true);
-
-CREATE POLICY "Authenticated users can manage services"
-  ON services FOR ALL
-  TO authenticated
-  USING (true)
-  WITH CHECK (true);
-
--- Staff: public read (active only, needed for booking form), authenticated full access
-ALTER TABLE staff ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Anyone can read active staff"
-  ON staff FOR SELECT
-  USING (active = true);
-
-CREATE POLICY "Authenticated users can manage staff"
-  ON staff FOR ALL
-  TO authenticated
-  USING (true)
-  WITH CHECK (true);
-
--- Customers: anon insert (booking form), authenticated read
-ALTER TABLE customers ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Anyone can insert customers"
-  ON customers FOR INSERT
-  WITH CHECK (true);
-
-CREATE POLICY "Authenticated users can read customers"
-  ON customers FOR SELECT
-  TO authenticated
-  USING (true);
-
-CREATE POLICY "Authenticated users can update customers"
-  ON customers FOR UPDATE
-  TO authenticated
-  USING (true)
-  WITH CHECK (true);
-
--- Bookings: anon insert, public select (for confirmation page), authenticated full
-ALTER TABLE bookings ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Anyone can insert bookings"
-  ON bookings FOR INSERT
-  WITH CHECK (true);
-
-CREATE POLICY "Anyone can read bookings"
-  ON bookings FOR SELECT
-  USING (true);
-
-CREATE POLICY "Authenticated users can update bookings"
-  ON bookings FOR UPDATE
-  TO authenticated
-  USING (true)
-  WITH CHECK (true);
-
--- Booking Services: follows booking access pattern
-ALTER TABLE booking_services ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Anyone can insert booking_services"
-  ON booking_services FOR INSERT
-  WITH CHECK (true);
-
-CREATE POLICY "Anyone can read booking_services"
-  ON booking_services FOR SELECT
-  USING (true);
-
-CREATE POLICY "Authenticated users can manage booking_services"
-  ON booking_services FOR ALL
-  TO authenticated
-  USING (true)
-  WITH CHECK (true);
-
--- ============================================================
 -- 6. App Settings table (key-value for configurable values)
 -- ============================================================
 CREATE TABLE IF NOT EXISTS app_settings (
@@ -159,20 +77,8 @@ CREATE TABLE IF NOT EXISTS app_settings (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-ALTER TABLE app_settings ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Anyone can read app_settings"
-  ON app_settings FOR SELECT
-  USING (true);
-
-CREATE POLICY "Authenticated users can manage app_settings"
-  ON app_settings FOR ALL
-  TO authenticated
-  USING (true)
-  WITH CHECK (true);
-
 -- ============================================================
--- Migration: Add deposit columns to bookings
+-- Migration: Add deposit columns to bookings (if not exist)
 -- ============================================================
 ALTER TABLE bookings ADD COLUMN IF NOT EXISTS deposit_image_path TEXT;
 ALTER TABLE bookings ADD COLUMN IF NOT EXISTS deposit_uploaded_at TIMESTAMPTZ;
@@ -180,4 +86,5 @@ ALTER TABLE bookings ADD COLUMN IF NOT EXISTS deposit_uploaded_at TIMESTAMPTZ;
 -- ============================================================
 -- Realtime
 -- ============================================================
-ALTER PUBLICATION supabase_realtime ADD TABLE bookings;
+-- Already enabled if bookings table exists, so we skip this
+-- To enable manually: ALTER PUBLICATION supabase_realtime ADD TABLE bookings;
