@@ -38,7 +38,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Check, X, Pencil, ImageIcon, CalendarDays, Clock, User, DollarSign } from 'lucide-react'
+import { Check, X, Pencil, ImageIcon, CalendarDays, Clock, User, DollarSign, Phone, CheckCircle2 } from 'lucide-react'
 import { updateBookingStatus, updateBooking, getBookingImageUrls } from '@/app/admin/actions'
 import type { BookingWithDetails, Staff } from '@/lib/types'
 import { cn } from '@/lib/utils'
@@ -160,6 +160,7 @@ export function BookingsTable({ bookings, onStatusChange, staff }: BookingsTable
           <TableHead>Deposit</TableHead>
           <TableHead>Staff</TableHead>
           <TableHead>Status</TableHead>
+          <TableHead>Call Status</TableHead>
           <TableHead>Appointment</TableHead>
           <TableHead>Created</TableHead>
           <TableHead />
@@ -213,6 +214,23 @@ export function BookingsTable({ bookings, onStatusChange, staff }: BookingsTable
               <Badge variant={statusVariant[b.status] ?? 'outline'}>
                 {b.status.charAt(0).toUpperCase() + b.status.slice(1)}
               </Badge>
+            </TableCell>
+            <TableCell>
+              {b.status === 'pending' && (
+                <Badge variant="outline" className="text-xs text-blue-600 border-blue-300 bg-blue-50 dark:bg-blue-950/20">
+                  <Phone className="h-3 w-3 mr-1" />
+                  Needs Call
+                </Badge>
+              )}
+              {b.status === 'confirmed' && (
+                <Badge variant="outline" className="text-xs text-emerald-600 border-emerald-300 bg-emerald-50 dark:bg-emerald-950/20">
+                  <CheckCircle2 className="h-3 w-3 mr-1" />
+                  Called
+                </Badge>
+              )}
+              {(b.status === 'completed' || b.status === 'cancelled') && (
+                <span className="text-xs text-muted-foreground">—</span>
+              )}
             </TableCell>
             <TableCell className="text-sm text-muted-foreground">
               <div>{formatET(b.booking_time, 'MMM d, yyyy')}</div>
