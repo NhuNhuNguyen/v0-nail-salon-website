@@ -24,6 +24,13 @@ export function RealtimeConfirmation({
   useEffect(() => {
     const supabase = createClient()
 
+    // Request browser notification permission
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission().catch(() => {
+        // User denied, silent fail
+      })
+    }
+
     const channel = supabase
       .channel(`confirm-${token}`)
       .on(
@@ -57,15 +64,44 @@ export function RealtimeConfirmation({
             return next
           })
 
-          // Notify the customer
+          // Notify the customer with toast + browser notification
           if (updated.status === 'confirmed') {
             toast.success('Your booking has been confirmed!')
+            
+            // Browser notification
+            if ('Notification' in window && Notification.permission === 'granted') {
+              new Notification('✅ Booking Confirmed!', {
+                body: 'Your appointment at MK Fashion Nails is confirmed. See you soon! 💅',
+                icon: '/images/favicon.ico',
+              })
+            }
           } else if (updated.status === 'cancelled') {
             toast.error('Your booking has been cancelled.')
+            
+            if ('Notification' in window && Notification.permission === 'granted') {
+              new Notification('❌ Booking Cancelled', {
+                body: 'Your appointment has been cancelled. Please contact us if you have questions.',
+                icon: '/images/favicon.ico',
+              })
+            }
           } else if (updated.booking_time) {
             toast.info('Your appointment time has been updated.')
+            
+            if ('Notification' in window && Notification.permission === 'granted') {
+              new Notification('📅 Appointment Time Updated', {
+                body: 'Your appointment has been rescheduled. Check your confirmation for details.',
+                icon: '/images/favicon.ico',
+              })
+            }
           } else if (updated.staff_id !== undefined) {
             toast.info('Your assigned staff has been updated.')
+            
+            if ('Notification' in window && Notification.permission === 'granted') {
+              new Notification('👤 Staff Assigned', {
+                body: next.staff ? `Your stylist is now ${next.staff.name}` : 'Your stylist has been updated.',
+                icon: '/images/favicon.ico',
+              })
+            }
           }
         },
       )

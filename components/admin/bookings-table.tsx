@@ -38,8 +38,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Check, X, Pencil, ImageIcon, CalendarDays, Clock, User, DollarSign, Phone, CheckCircle2 } from 'lucide-react'
-import { updateBookingStatus, updateBooking, getBookingImageUrls } from '@/app/admin/actions'
+import { Check, X, Pencil, ImageIcon, CalendarDays, Clock, User, DollarSign, Phone, CheckCircle2, History } from 'lucide-react'
+import { updateBookingStatus, updateBooking, getBookingImageUrls, getCallLogs } from '@/app/admin/actions'
 import type { BookingWithDetails, Staff } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { formatET, utcToET, etToUTC } from '@/lib/timezone'
@@ -93,6 +93,12 @@ export function BookingsTable({ bookings, onStatusChange, staff }: BookingsTable
   const [editStaff, setEditStaff] = useState('')
   const [editCalendarOpen, setEditCalendarOpen] = useState(false)
 
+  // Call log state
+  const [callLogsTarget, setCallLogsTarget] = useState<string | null>(null)
+  const [callLogsData, setCallLogsData] = useState<any[]>([])
+  const [callLogsOpen, setCallLogsOpen] = useState(false)
+  const [callLogsLoading, setCallLogsLoading] = useState(false)
+
   const handleAction = (
     id: string,
     status: 'confirmed' | 'completed' | 'cancelled',
@@ -111,6 +117,17 @@ export function BookingsTable({ bookings, onStatusChange, staff }: BookingsTable
       const result = await getBookingImageUrls(paths)
       setImageUrls(result.urls)
       setImageLoading(false)
+    })
+  }
+
+  const handleViewCallLogs = (bookingId: string) => {
+    setCallLogsTarget(bookingId)
+    setCallLogsOpen(true)
+    setCallLogsLoading(true)
+    startTransition(async () => {
+      const result = await getCallLogs(bookingId)
+      setCallLogsData(result.data || [])
+      setCallLogsLoading(false)
     })
   }
 
@@ -257,6 +274,17 @@ export function BookingsTable({ bookings, onStatusChange, staff }: BookingsTable
                     </span>
                   </Button>
                 )}
+                {/* Call history button */}
+                <Button
+                  size="icon"
+                  variant="outline"
+                  className="h-8 w-8"
+                  onClick={() => handleViewCallLogs(b.id)}
+                  aria-label="View call history"
+                  title="View call history"
+                >
+                  <History className="h-4 w-4" />
+                </Button>
                 {/* Edit button */}
                 {(b.status === 'pending' || b.status === 'confirmed') && (
                   <Button
@@ -443,6 +471,38 @@ export function BookingsTable({ bookings, onStatusChange, staff }: BookingsTable
             Save Changes
           </Button>
         </DialogFooter>
+      </DialogContent>
+    </Dialog>
+
+    {/* Call logs dialog */}
+    <Dialog open={callLogsOpen} onOpenChange={setCallLogsOpen}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Call History</DialogTitle>
+        </DialogHeader>
+        {callLogsLoading ? (
+          <div className="py-8 text-center text-muted-foreground">Loading call history…</div>
+        ) : callLogsData.length === 0 ? (
+          <div className="py-8 text-center text-muted-foreground">
+            <Phone className="h-5 w-5 mx-auto mb-2 opacity-50" />
+            <p>No calls logged yet</p>
+          </div>
+        ) : (
+          <div className="space-y-4 max-h-[60vh] overflow-y-auto">
+            {callLogsData.map((log: any) => (
+              <div key={log.id} className="border-l-2 border-blue-400 pl-4 pb-4">
+                <div className="text-xs text-muted-foreground">
+                  {formatET(log.called_at, 'MMM d, yyyy h:mm a')}
+                </div>
+                {log.admin_notes && (
+                  <div className="text-sm mt-1 text-foreground">
+                    {log.admin_notes}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
       </DialogContent>
     </Dialog>
     </>

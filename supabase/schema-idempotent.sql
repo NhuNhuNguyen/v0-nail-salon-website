@@ -82,6 +82,21 @@ CREATE TABLE IF NOT EXISTS app_settings (
 -- ============================================================
 ALTER TABLE bookings ADD COLUMN IF NOT EXISTS deposit_image_path TEXT;
 ALTER TABLE bookings ADD COLUMN IF NOT EXISTS deposit_uploaded_at TIMESTAMPTZ;
+ALTER TABLE bookings ADD COLUMN IF NOT EXISTS reminder_email_sent_at TIMESTAMPTZ;
+
+-- ============================================================
+-- 7. Call Log table (tracks admin phone calls to customers)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS call_logs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  booking_id UUID NOT NULL REFERENCES bookings(id) ON DELETE CASCADE,
+  admin_notes TEXT,
+  called_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_call_logs_booking_id ON call_logs(booking_id);
+CREATE INDEX IF NOT EXISTS idx_call_logs_called_at ON call_logs(called_at DESC);
 
 -- ============================================================
 -- Realtime

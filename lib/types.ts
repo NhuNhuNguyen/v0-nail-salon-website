@@ -39,6 +39,7 @@ export interface Booking {
   notes: string | null
   sample_image_paths: string[]
   booking_time: string // ISO datetime — customer's expected arrival
+  reminder_email_sent_at: string | null // timestamp of last reminder email
   created_at: string
 }
 
@@ -47,6 +48,14 @@ export interface BookingService {
   booking_id: string
   service_id: string
   price_at_booking: number // cents
+}
+
+export interface CallLog {
+  id: string
+  booking_id: string
+  admin_notes: string | null
+  called_at: string // ISO datetime
+  created_at: string
 }
 
 export interface Review {

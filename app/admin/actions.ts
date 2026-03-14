@@ -2,6 +2,36 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { formatET } from '@/lib/timezone'
+
+// Twilio SMS helper
+async function sendSMS(toPhone: string, message: string) {
+  if (!process.env.TWILIO_ACCOUNT_SID || !process.env.TWILIO_AUTH_TOKEN || !process.env.TWILIO_PHONE_NUMBER) {
+    console.warn('Twilio not configured, skipping SMS')
+    return
+  }
+
+  try {
+    const response = await fetch('https://api.twilio.com/2010-04-01/Accounts/' + process.env.TWILIO_ACCOUNT_SID + '/Messages.json', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Basic ' + Buffer.from(`${process.env.TWILIO_ACCOUNT_SID}:${process.env.TWILIO_AUTH_TOKEN}`).toString('base64'),
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        From: process.env.TWILIO_PHONE_NUMBER,
+        To: toPhone,
+        Body: message,
+      }).toString(),
+    })
+
+    if (!response.ok) {
+      console.error('Twilio SMS error:', await response.text())
+    }
+  } catch (err) {
+    console.error('SMS send failed:', err)
+  }
+}
 
 export async function updateBookingStatus(
   bookingId: string,
@@ -15,12 +45,44 @@ export async function updateBookingStatus(
 
   if (!user) return { error: 'Unauthorized' }
 
+  // Fetch booking details before updating
+  const { data: booking } = await supabase
+    .from('bookings')
+    .select('*,customer:customers(name,phone),booking_time')
+    .eq('id', bookingId)
+    .single()
+
   const { error } = await supabase
     .from('bookings')
     .update({ status })
     .eq('id', bookingId)
 
   if (error) return { error: error.message }
+
+  // Send SMS to customer when confirmed
+  if (status === 'confirmed' && booking) {
+    const customer = booking.customer as any
+    const appointmentTime = formatET(booking.booking_time, 'h:mm a MMM d')
+    const message = `Hi ${customer.name}, your appointment at MK Fashion Nails is confirmed for ${appointmentTime}. See you soon! 💅`
+    
+    await sendSMS(customer.phone, message)
+
+    // Log the call
+    await supabase
+      .from('call_logs')
+      .insert({
+        booking_id: bookingId,
+        admin_notes: 'Booking confirmed via admin dashboard',
+      })
+  }
+
+  // Send cancellation SMS
+  if (status === 'cancelled' && booking) {
+    const customer = booking.customer as any
+    const message = `Hi ${customer.name}, your appointment at MK Fashion Nails & Spa has been cancelled. Please contact us if you have questions.`
+    
+    await sendSMS(customer.phone, message)
+  }
 
   return {}
 }
@@ -100,6 +162,25 @@ export async function fetchStaff(): Promise<{ data: any[]; error?: string }> {
     .select('*')
     .eq('active', true)
     .order('name')
+
+  if (error) return { data: [], error: error.message }
+  return { data: data ?? [] }
+}
+
+export async function getCallLogs(bookingId: string): Promise<{ data: any[]; error?: string }> {
+  const supabase = await createClient()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) return { data: [], error: 'Unauthorized' }
+
+  const { data, error } = await supabase
+    .from('call_logs')
+    .select('*')
+    .eq('booking_id', bookingId)
+    .order('called_at', { ascending: false })
 
   if (error) return { data: [], error: error.message }
   return { data: data ?? [] }
