@@ -159,10 +159,26 @@ export async function createBooking(formData: FormData) {
   const bookingTimeFormatted = formatET(bookingTime, 'EEEE, MMMM d, yyyy h:mm a')
   const serviceNames = services.map((s) => s.name)
   
-  // Send email asynchronously (don't block on it)
-  sendBookingNotification(customerName, phone, bookingTimeFormatted, serviceNames, estimatedTotal, booking.id.slice(0, 8).toUpperCase()).catch((err) => {
-    console.error('Failed to send booking notification email:', err)
-  })
+  // Send email notification (with error logging)
+  try {
+    console.log(`[Booking] Sending email for booking ${booking.id.slice(0, 8).toUpperCase()}...`)
+    const emailResult = await sendBookingNotification(
+      customerName,
+      phone,
+      bookingTimeFormatted,
+      serviceNames,
+      estimatedTotal,
+      booking.id.slice(0, 8).toUpperCase()
+    )
+    
+    if (!emailResult.success) {
+      console.error(`[Booking] Email notification failed but booking still created:`, emailResult.error)
+    } else {
+      console.log(`[Booking] Email notification sent successfully for booking ${booking.id.slice(0, 8).toUpperCase()}`)
+    }
+  } catch (err) {
+    console.error(`[Booking] Error sending notification email (booking still created):`, err instanceof Error ? err.message : String(err))
+  }
 
   // 9. Broadcast new-booking event for admin real-time updates
   const channel = supabase.channel('admin-bookings')

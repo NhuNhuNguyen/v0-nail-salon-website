@@ -119,21 +119,29 @@ export const emailTemplates = {
  * Initialize nodemailer transporter with Gmail SMTP
  */
 function getTransporter() {
-  if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) {
-    throw new Error('Gmail credentials not configured: GMAIL_USER and GMAIL_APP_PASSWORD required in .env.local')
+  const gmailUser = process.env.GMAIL_USER
+  const gmailPass = process.env.GMAIL_APP_PASSWORD
+
+  if (!gmailUser || !gmailPass) {
+    const missing = []
+    if (!gmailUser) missing.push('GMAIL_USER')
+    if (!gmailPass) missing.push('GMAIL_APP_PASSWORD')
+    throw new Error(
+      `Gmail credentials not configured: ${missing.join(', ')} required in .env.local or production environment`
+    )
   }
 
   return nodemailer.createTransport({
     service: 'gmail',
     auth: {
-      user: process.env.GMAIL_USER,
-      pass: process.env.GMAIL_APP_PASSWORD,
+      user: gmailUser,
+      pass: gmailPass,
     },
   })
 }
 
 /**
- * Send email with retry logic
+ * Send email with retry logic and detailed error handling
  */
 export async function sendEmail(
   to: string,
@@ -146,6 +154,7 @@ export async function sendEmail(
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
+      console.log(`[Email] Attempt ${attempt}/${maxRetries} - Sending to: ${to}`)
       const transporter = getTransporter()
       
       const info = await transporter.sendMail({
@@ -165,14 +174,19 @@ export async function sendEmail(
       return { success: true, info }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error)
+      const errorCode = (error as any)?.code
+      
       console.error(`❌ Email send failed (attempt ${attempt}/${maxRetries}):`, {
         to,
         subject,
         error: errorMessage,
+        code: errorCode,
+        gmailConfigured: !!process.env.GMAIL_USER && !!process.env.GMAIL_APP_PASSWORD,
       })
 
       if (attempt === maxRetries) {
-        throw error
+        // Final attempt failed - throw error
+        throw new Error(`Email delivery failed after ${maxRetries} attempts: ${errorMessage}`)
       }
 
       // Wait before retrying
@@ -192,18 +206,36 @@ export async function sendBookingNotification(
   estimatedTotal: number,
   bookingId: string
 ) {
+  // Validation
+  if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) {
+    const missing = []
+    if (!process.env.GMAIL_USER) missing.push('GMAIL_USER')
+    if (!process.env.GMAIL_APP_PASSWORD) missing.push('GMAIL_APP_PASSWORD')
+    console.error('❌ EMAIL CONFIG ERROR - Missing credentials:', missing.join(', '))
+    return { success: false, error: `Missing email config: ${missing.join(', ')}` }
+  }
+
   if (!process.env.STAFF_EMAIL) {
-    console.warn('⚠️ STAFF_EMAIL not configured. Booking notification email not sent.')
+    console.error('❌ EMAIL CONFIG ERROR - STAFF_EMAIL not set')
     return { success: false, error: 'STAFF_EMAIL not configured' }
   }
 
   try {
+    console.log(`📧 Attempting to send booking notification email to ${process.env.STAFF_EMAIL}`)
     const template = emailTemplates.bookingNotification(customerName, phone, bookingTime, services, estimatedTotal, bookingId)
-    await sendEmail(process.env.STAFF_EMAIL, template.subject, template.html)
+    
+    const result = await sendEmail(process.env.STAFF_EMAIL, template.subject, template.html)
+    console.log('✅ Booking notification email sent successfully')
     return { success: true }
   } catch (error) {
-    console.error('Failed to send booking notification:', error)
-    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' }
+    const errorMsg = error instanceof Error ? error.message : String(error)
+    console.error('❌ Failed to send booking notification email:', {
+      error: errorMsg,
+      stack: error instanceof Error ? error.stack : undefined,
+      staffEmail: process.env.STAFF_EMAIL,
+      gmailUser: process.env.GMAIL_USER,
+    })
+    return { success: false, error: errorMsg }
   }
 }
 
