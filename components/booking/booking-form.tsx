@@ -151,29 +151,6 @@ export function BookingForm({ services, staff }: BookingFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
-      {/* DEV ONLY: quick dummy fill */}
-      {process.env.NODE_ENV === 'development' && (
-        <div className="flex items-center justify-between rounded-lg border border-dashed border-amber-400 bg-amber-50 px-3 py-2 dark:bg-amber-950/20">
-          <span className="text-xs font-semibold uppercase tracking-wide text-amber-600 dark:text-amber-400">Dev</span>
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            className="h-7 border-amber-400 text-xs text-amber-700 hover:bg-amber-100 dark:text-amber-400 dark:hover:bg-amber-950/40"
-            onClick={() => {
-              setName('Test Customer')
-              setPhone('(647) 555-0123')
-              setSelectedDate(addDays(today, 1))
-              setSelectedTime('10:00')
-              if (services.length > 0) setSelectedIds(new Set([services[0].id]))
-              setError(null)
-            }}
-          >
-            Fill Dummy Data
-          </Button>
-        </div>
-      )}
-
       {/* Customer info */}
       <div className="space-y-4">
         <h2 className="font-serif text-xl text-foreground">Your Information</h2>

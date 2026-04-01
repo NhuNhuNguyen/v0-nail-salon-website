@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { formatET } from '@/lib/timezone'
+import { sendBookingNotification } from '@/lib/email-service'
 
 const MAX_IMAGES = 5
 const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5 MB
@@ -154,96 +155,14 @@ export async function createBooking(formData: FormData) {
     }
   }
 
-  // 8. Send email notification to staff (optional - only if configured)
-  if (process.env.SENDGRID_API_KEY && process.env.SENDGRID_FROM_EMAIL && process.env.STAFF_EMAIL) {
-    const bookingTimeFormatted = formatET(bookingTime, 'EEEE, MMMM d, yyyy h:mm a')
-    const adminLink = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/admin`
-    
-    const htmlContent = `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <meta charset="UTF-8">
-          <style>
-            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #333; }
-            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-            .header { background-color: #8b4789; color: white; padding: 20px; border-radius: 8px 8px 0 0; text-align: center; }
-            .content { background-color: #f9fafb; padding: 20px; border-radius: 0 0 8px 8px; }
-            .section { margin-bottom: 20px; }
-            .label { font-weight: 600; color: #555; margin-top: 12px; }
-            .value { color: #333; margin-top: 4px; }
-            .button { display: inline-block; background-color: #8b4789; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px; margin-top: 20px; }
-            .footer { text-align: center; margin-top: 20px; font-size: 12px; color: #999; }
-          </style>
-        </head>
-        <body>
-          <div class="container">
-            <div class="header">
-              <h1 style="margin: 0;">📞 New Booking Received</h1>
-            </div>
-            <div class="content">
-              <p>A new booking request has been submitted. Please review and call the customer to confirm the appointment.</p>
-              
-              <div class="section">
-                <div class="label">👤 Customer Name</div>
-                <div class="value">${customerName}</div>
-              </div>
-              
-              <div class="section">
-                <div class="label">📱 Phone Number</div>
-                <div class="value"><a href="tel:${phone}">${phone}</a></div>
-              </div>
-              
-              <div class="section">
-                <div class="label">📅 Requested Date & Time</div>
-                <div class="value">${bookingTimeFormatted}</div>
-              </div>
-              
-              <div class="section">
-                <div class="label">💅 Services</div>
-                <div class="value">${services.map((s) => s.name).join(', ')}</div>
-              </div>
-              
-              <div class="section">
-                <div class="label">💰 Estimated Total</div>
-                <div class="value">$${(estimatedTotal / 100).toFixed(2)}+</div>
-              </div>
-              
-              <div class="section">
-                <div class="label">📋 Booking ID</div>
-                <div class="value" style="font-family: monospace;">${booking.id.slice(0, 8).toUpperCase()}</div>
-              </div>
-              
-              <a href="${adminLink}" class="button">View in Admin Dashboard →</a>
-              
-              <div class="footer">
-                <p>⏰ Please call the customer ASAP to confirm this booking. No action is needed from the customer.</p>
-              </div>
-            </div>
-          </div>
-        </body>
-      </html>
-    `
-
-    // Send via SendGrid
-    fetch('https://api.sendgrid.com/v3/mail/send', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${process.env.SENDGRID_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        personalizations: [
-          {
-            to: [{ email: process.env.STAFF_EMAIL }],
-            subject: `📞 New Booking – ${customerName}`,
-          },
-        ],
-        from: { email: process.env.SENDGRID_FROM_EMAIL },
-        content: [{ type: 'text/html', value: htmlContent }],
-      }),
-    }).catch(console.error)
-  }
+  // 8. Send email notification to staff
+  const bookingTimeFormatted = formatET(bookingTime, 'EEEE, MMMM d, yyyy h:mm a')
+  const serviceNames = services.map((s) => s.name)
+  
+  // Send email asynchronously (don't block on it)
+  sendBookingNotification(customerName, phone, bookingTimeFormatted, serviceNames, estimatedTotal, booking.id.slice(0, 8).toUpperCase()).catch((err) => {
+    console.error('Failed to send booking notification email:', err)
+  })
 
   // 9. Broadcast new-booking event for admin real-time updates
   const channel = supabase.channel('admin-bookings')
