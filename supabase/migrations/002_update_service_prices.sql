@@ -1,9 +1,6 @@
--- ============================================================
--- MK Fashion Nails & Spa — Seed Data
--- Run this AFTER schema.sql in the Supabase SQL Editor
--- ============================================================
+-- Replace the original service catalog with the current salon price list.
+UPDATE services SET active = false WHERE active = true;
 
--- Current service catalog (sort_order 100–506)
 INSERT INTO services (category, name, price_display, price_min, duration_minutes, sort_order) VALUES
   ('Nails', 'Acrylic', '$50 & Up', 5000, 60, 100),
   ('Nails', 'Fill Acrylic', '$45 & Up', 4500, 45, 101),
@@ -51,16 +48,3 @@ INSERT INTO services (category, name, price_display, price_min, duration_minutes
   ('Eyelash Services', 'Lash Full Set (Each Eye)', '$100 & Up', 10000, 120, 504),
   ('Eyelash Services', 'Lash Refill', '$50 & Up / $70 & Up', 5000, 60, 505),
   ('Eyelash Services', 'Tinting', '$10 & Up', 1000, 20, 506);
-
--- Staff
-INSERT INTO staff (name) VALUES
-  ('Anna'),
-  ('Bianca'),
-  ('Christina'),
-  ('Diana');
-
--- App Settings
-INSERT INTO app_settings (key, value) VALUES
-  ('deposit_amount', '{"cents": 2000}'),
-  ('deposit_payment_info', '{"method": "Bank Transfer", "details": "Please send the deposit via e-Transfer to:\n\nEmail: payments@mkfashionnails.com\nName: MK Fashion Nails & Spa\n\nPlease include your booking name as the memo."}')
-ON CONFLICT (key) DO NOTHING;
